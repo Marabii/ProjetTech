@@ -1,0 +1,147 @@
+[
+  {
+    "id": "id1",
+    "Date_de_naissance": "1999-05-15T00:00:00.000Z",
+    "annee_d_entree": "2018-09-01T00:00:00.000Z",
+    "nom": "Dupont",
+    "prenom": "Pierre",
+    "mail": "pierre.dupont@example.com",
+    "Genre": true,
+    "Parcours": {
+      "id": "id_parcours1",
+      "type_de_bac": "S",
+      "filiere_d_origine": "MP",
+      "prepa_d_origine": "Lycée Louis-le-Grand",
+      "mode_d_admission": "Mines-Pont",
+      "est_fusion": false,
+      "autre_parcours_diplomant": null,
+      "stages": [
+        {
+          "id": "id_stage1",
+          "nom_d_entreprise": "EDF",
+          "annee_du_stage": "2019-06-01T00:00:00.000Z",
+          "duree_du_stage": "2 mois",
+          "poste": "Assistant ingénieur"
+        },
+        {
+          "id": "id_stage2",
+          "nom_d_entreprise": "Airbus",
+          "annee_du_stage": "2020-07-01T00:00:00.000Z",
+          "duree_du_stage": "3 mois",
+          "poste": "Stagiaire en R&D"
+        }
+      ],
+      "diplomes": [
+        {
+          "id": "id_diplome1",
+          "nom": "Diplôme d'Ingénieur",
+          "annee_d_obtention": "2021-06-30T00:00:00.000Z"
+        }
+      ],
+      "electifs": [
+        {
+          "id": "id_electif1",
+          "type_electif": "Majeure",
+          "etablissement_electif": "Mines Saint-Étienne",
+          "semestre_d_electif": "S7"
+        },
+        {
+          "id": "id_electif2",
+          "type_electif": "Défi",
+          "etablissement_electif": "Mines Saint-Étienne",
+          "semestre_d_electif": "S8"
+        }
+      ]
+    }
+  },
+  {
+    "id": "id2",
+    "Date_de_naissance": "1998-11-23T00:00:00.000Z",
+    "annee_d_entree": "2017-09-01T00:00:00.000Z",
+    "nom": "Martin",
+    "prenom": "Sophie",
+    "mail": "sophie.martin@example.com",
+    "Genre": false,
+    "Parcours": {
+      "id": "id_parcours2",
+      "type_de_bac": "ES",
+      "filiere_d_origine": "PC",
+      "prepa_d_origine": "Lycée Henri IV",
+      "mode_d_admission": "AST",
+      "est_fusion": true,
+      "autre_parcours_diplomant": {
+        "id": "id_formation1",
+        "type": "Double Diplôme",
+        "aPartenariat": true,
+        "etablissement": "Université de Tokyo",
+        "duree": "1 an",
+        "pays": "Japon",
+        "id_alumni": "id2"
+      },
+      "stages": [
+        {
+          "id": "id_stage3",
+          "nom_d_entreprise": "Total",
+          "annee_du_stage": "2018-01-01T00:00:00.000Z",
+          "duree_du_stage": "6 mois",
+          "poste": "Ingénieure stagiaire"
+        }
+      ],
+      "diplomes": [
+        {
+          "id": "id_diplome2",
+          "nom": "Master en Management",
+          "annee_d_obtention": "2020-05-31T00:00:00.000Z"
+        }
+      ],
+      "electifs": [
+        {
+          "id": "id_electif3",
+          "type_electif": "Axes",
+          "etablissement_electif": "Autre",
+          "semestre_d_electif": "S9"
+        }
+      ]
+    }
+  },
+  {
+    "id": "id3",
+    "Date_de_naissance": "2000-02-08T00:00:00.000Z",
+    "annee_d_entree": "2019-09-01T00:00:00.000Z",
+    "nom": "Nguyen",
+    "prenom": "Théo",
+    "mail": "theo.nguyen@example.com",
+    "Genre": true,
+    "Parcours": {
+      "id": "id_parcours3",
+      "type_de_bac": "S",
+      "filiere_d_origine": "PSI",
+      "prepa_d_origine": "Lycée du Parc",
+      "mode_d_admission": "EM",
+      "est_fusion": false,
+      "autre_parcours_diplomant": null,
+      "stages": [],
+      "diplomes": [
+        {
+          "id": "id_diplome3",
+          "nom": "Licence en Physique",
+          "annee_d_obtention": "2019-09-01T00:00:00.000Z"
+        }
+      ],
+      "electifs": [
+        {
+          "id": "id_electif4",
+          "type_electif": "TB/CHELS",
+          "etablissement_electif": "Mines Saint-Étienne",
+          "semestre_d_electif": "S7"
+        },
+        {
+          "id": "id_electif5",
+          "type_electif": "Majeure",
+          "etablissement_electif": "Mines Saint-Étienne",
+          "semestre_d_electif": "S8"
+        }
+      ]
+    }
+  }
+]

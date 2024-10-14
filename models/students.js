@@ -66,8 +66,4 @@ const identiteSchema = new Schema({
 
 const Etudiant = mongoose.model("Etudiant", identiteSchema);
 
-Etudiant.find({
-  "Parcours.autre_parcours_diplomant.aPartenariat": true,
-}).then((data) => console.log(data));
-
 module.exports = Etudiant;

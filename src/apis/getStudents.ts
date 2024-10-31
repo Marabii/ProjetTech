@@ -3,21 +3,26 @@ import Etudiant from "../models/students";
 
 const router = Router();
 
-// API endpoint that handles all filters
 router.post("/api/students", async (req: Request, res: Response) => {
   try {
-    // Get the request body
-    let query: Record<string, unknown> = req.body;
+    let { page, limit, ...query } = req.body;
 
-    // Filter out empty string values from the query
+    // Set default values if none are provided
+    page = page || 1;
+    limit = limit || 20;
+
+    // Calculate the skipping number
+    const skip = (page - 1) * limit;
+
+    // Filter out empty string values
     Object.keys(query).forEach((key) => {
       if (query[key] === "") {
         delete query[key];
       }
     });
 
-    // Query the database with the filtered query object
-    const students = await Etudiant.find(query);
+    // Query the database with pagination
+    const students = await Etudiant.find(query).skip(skip).limit(limit);
     res.json(students);
   } catch (error) {
     console.error("Error fetching students:", error);

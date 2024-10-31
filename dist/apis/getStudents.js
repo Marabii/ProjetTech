@@ -8,6 +8,17 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
+var __rest = (this && this.__rest) || function (s, e) {
+    var t = {};
+    for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p) && e.indexOf(p) < 0)
+        t[p] = s[p];
+    if (s != null && typeof Object.getOwnPropertySymbols === "function")
+        for (var i = 0, p = Object.getOwnPropertySymbols(s); i < p.length; i++) {
+            if (e.indexOf(p[i]) < 0 && Object.prototype.propertyIsEnumerable.call(s, p[i]))
+                t[p[i]] = s[p[i]];
+        }
+    return t;
+};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
@@ -15,19 +26,22 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = require("express");
 const students_1 = __importDefault(require("../models/students"));
 const router = (0, express_1.Router)();
-// API endpoint that handles all filters
 router.post("/api/students", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        // Get the request body
-        let query = req.body;
-        // Filter out empty string values from the query
+        let _a = req.body, { page, limit } = _a, query = __rest(_a, ["page", "limit"]);
+        // Set default values if none are provided
+        page = page || 1;
+        limit = limit || 20;
+        // Calculate the skipping number
+        const skip = (page - 1) * limit;
+        // Filter out empty string values
         Object.keys(query).forEach((key) => {
             if (query[key] === "") {
                 delete query[key];
             }
         });
-        // Query the database with the filtered query object
-        const students = yield students_1.default.find(query);
+        // Query the database with pagination
+        const students = yield students_1.default.find(query).skip(skip).limit(limit);
         res.json(students);
     }
     catch (error) {

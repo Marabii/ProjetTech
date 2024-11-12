@@ -1,60 +1,52 @@
 const fs = require("fs");
 const path = require("path");
 
-// Define the expected keys
-const expectedKeys = [
-  "Identifiant OP",
-  "Etablissement d'origine",
-  "Filière",
-  "Matricule (interne)",
-  "Nationalité",
-  "Nom",
-  "Prénom",
-  "Situation actuelle",
-  "Défi",
-  "A",
-  "Majeure",
-];
+// Load students data from JSON file
+const filePath = path.join(__dirname, "students_data.json");
+const data = JSON.parse(fs.readFileSync(filePath, "utf8"));
 
-// Load and parse the combined.json file
-const combinedFilePath = path.join(__dirname, "combined.json");
-const combinedData = JSON.parse(fs.readFileSync(combinedFilePath, "utf8"));
+// Split data into student and link records based on the presence of "Extrémité 2"
+const students = data.filter(
+  (record) => record.hasOwnProperty("Nom") && record.hasOwnProperty("Prénom")
+);
+const links = data.filter((record) => record.hasOwnProperty("Extrémité 2"));
 
-// Filter each object to contain only the expected keys
-const cleanedData = combinedData.map((item) => {
-  // Create a new object with only the expected keys
-  const cleanedItem = {};
-
-  expectedKeys.forEach((key) => {
-    if (item.hasOwnProperty(key)) {
-      cleanedItem[key] = item[key];
-    } else {
-      cleanedItem[key] = null; // Add missing keys with null values
+// Helper function to merge objects with conflicting fields into arrays of unique values
+const mergeRecords = (record1, record2) => {
+  const merged = { ...record1 };
+  Object.keys(record2).forEach((key) => {
+    if (merged[key] === undefined) {
+      // If the key doesn't exist in the first record, add it
+      merged[key] = record2[key];
+    } else if (merged[key] !== record2[key]) {
+      // If the key exists but the values are different, merge into an array of unique values
+      merged[key] = Array.isArray(merged[key]) ? merged[key] : [merged[key]];
+      if (!merged[key].includes(record2[key])) {
+        merged[key].push(record2[key]);
+      }
     }
   });
+  return merged;
+};
 
-  return cleanedItem;
+// Combine students with their corresponding link records
+const mergedData = students.map((student) => {
+  const fullName = `${student.Nom} ${student.Prénom}`;
+  const matchingLinks = links.filter(
+    (link) => link["Extrémité 2"] === fullName
+  );
+
+  // Merge all matching links with the student record
+  let combinedRecord = { ...student };
+  matchingLinks.forEach((link) => {
+    combinedRecord = mergeRecords(combinedRecord, link);
+  });
+
+  return combinedRecord;
 });
 
-// Write the cleaned data back to combined.json
-fs.writeFileSync(
-  combinedFilePath,
-  JSON.stringify(cleanedData, null, 2),
-  "utf8"
-);
+// Save the merged data to a new JSON file
+const outputPath = path.join(__dirname, "merged_students_data.json");
+fs.writeFileSync(outputPath, JSON.stringify(mergedData, null, 2), "utf8");
 
-console.log(
-  `Data in ${combinedFilePath} has been cleaned to match the specified key structure.`
-);
-
-const obj = {
-  nom: Nom,
-  prenom: Prénom,
-  A: A,
-  Parcours: {
-    filiere_d_origine: Filière,
-    prepa_d_origine: "Etablissement d'origine",
-    nationalite: Nationalité,
-    electifs: [{ type_electif: Majeure }],
-  },
-};
+console.log(`Merged data successfully saved to ${outputPath}`);

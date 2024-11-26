@@ -3,10 +3,10 @@ dotenv.config();
 
 import express, { Application } from "express";
 import cors from "cors";
+import bodyParser from "body-parser";
 
 const port: string | number = process.env.PORT || 3001;
 
-// Assume these are TypeScript modules as well. If not, you'd need to provide types or use `require` with a type assertion.
 import getStudents from "./apis/getStudents";
 import changeDB from "./apis/changeDB";
 import getSuggestions from "./apis/getSuggestions";
@@ -25,8 +25,8 @@ app.use(
   })
 );
 
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(bodyParser.json({ limit: "50mb" }));
+app.use(bodyParser.urlencoded({ limit: "50mb", extended: true }));
 
 app.use(getStudents);
 app.use(changeDB);

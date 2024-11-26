@@ -44,8 +44,6 @@ const parseXlsxFiles = () => {
           raw: false, // Forces all data to be returned as strings
         });
 
-        console.log(sheetName, sheetData.slice(2));
-
         // Add promo key and convert every cell value to a string explicitly
         const sheetDataWithPromo = sheetData.map((row) => {
           const rowWithStrings = {};

@@ -1,0 +1,21 @@
+{
+  //Bdd: Entite Principale
+  "Nom": "COUPRIE",
+  "Prénom": "Charles",
+  "Nationalité": "FRANCE",
+  "Matricule (interne)": "E14-0023",
+  "Filière": "MP",
+  "Etablissement d'origine": null,
+  "Identifiant OP": "1918",
+  //Bdd: UNIVERSITE visitant
+  "universitesVisitant": [
+    {
+      "Identifiant OP": "36740",
+      "Entité principale - Identifiant OP": "1918",
+      "Type Mobilité": "Echange de crédit",
+      "Date de début": "09/05/2016",
+      "Date de fin": "09/29/2017 23:59:00",
+      "Entité liée - Nom": "ECOLE DES  MINES DE SAINT-ETIENNE"
+    }
+  ]
+}

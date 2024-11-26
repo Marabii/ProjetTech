@@ -1,4 +1,5 @@
 "use strict";
+// models/Etudiant.ts
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
     var desc = Object.getOwnPropertyDescriptor(m, k);
@@ -15,27 +16,111 @@ var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (
 }) : function(o, v) {
     o["default"] = v;
 });
-var __importStar = (this && this.__importStar) || function (mod) {
-    if (mod && mod.__esModule) return mod;
-    var result = {};
-    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
-    __setModuleDefault(result, mod);
-    return result;
-};
+var __importStar = (this && this.__importStar) || (function () {
+    var ownKeys = function(o) {
+        ownKeys = Object.getOwnPropertyNames || function (o) {
+            var ar = [];
+            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
+            return ar;
+        };
+        return ownKeys(o);
+    };
+    return function (mod) {
+        if (mod && mod.__esModule) return mod;
+        var result = {};
+        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
+        __setModuleDefault(result, mod);
+        return result;
+    };
+})();
 Object.defineProperty(exports, "__esModule", { value: true });
 const mongoose_1 = __importStar(require("mongoose"));
-const identiteSchema = new mongoose_1.Schema({
-    etablissementOrigine: { type: String, required: false },
-    filiere: { type: String, required: false },
-    matriculeInterne: { type: String, required: false },
-    nationalite: { type: String, required: false },
-    nom: { type: String, required: false },
-    prenom: { type: String, required: false },
-    situationActuelle: { type: String, required: false },
-    defi: { type: String, required: false },
-    a: { type: String, required: false },
-    majeure: { type: String, required: false },
+// Define the ConventionDeStage schema
+const ConventionDeStageSchema = new mongoose_1.Schema({
+    "Entité principale - Identifiant OP": {
+        type: String,
+        required: true,
+    },
+    "Date de début du stage": {
+        type: String,
+        required: false,
+    },
+    "Date de fin du stage": {
+        type: String,
+        required: false,
+    },
+    "Stage Fonction occupée": {
+        type: String,
+        required: false,
+    },
+    "Nom Stage": {
+        type: String,
+        required: false,
+    },
+}, { _id: false }); // _id: false to prevent creation of subdocument IDs
+// Define the UniversiteVisitant schema
+const UniversiteVisitantSchema = new mongoose_1.Schema({
+    "Entité principale - Identifiant OP": {
+        type: String,
+        required: true,
+    },
+    "Date de début mobilité": {
+        type: String,
+        required: false,
+    },
+    "Date de fin mobilité": {
+        type: String,
+        required: false,
+    },
+    "Type Mobilité": {
+        type: String,
+        required: false,
+    },
+    "Nom mobilité": {
+        type: String,
+        required: false,
+    },
+}, { _id: false });
+// Define the IEtudiant schema
+const EtudiantSchema = new mongoose_1.Schema({
+    "Identifiant OP": {
+        type: String,
+        required: true,
+        unique: true,
+    },
+    "Etablissement d'origine": {
+        type: String,
+        required: false,
+    },
+    Filière: {
+        type: String,
+        required: false,
+    },
+    Nationalité: {
+        type: String,
+        required: false,
+    },
+    Nom: {
+        type: String,
+        required: false,
+    },
+    Prénom: {
+        type: String,
+        required: false,
+    },
+    "CONVENTION DE STAGE": {
+        type: [ConventionDeStageSchema],
+        default: undefined, // Makes the array optional
+    },
+    "UNIVERSITE visitant": {
+        type: [UniversiteVisitantSchema],
+        default: undefined, // Makes the array optional
+    },
+}, {
+    timestamps: true, // Optional: adds createdAt and updatedAt fields
 });
-const Etudiant = mongoose_1.default.model("Etudiant", identiteSchema);
+// Create an index on "Identifiant OP" for faster queries
+EtudiantSchema.index({ "Identifiant OP": 1 });
+const Etudiant = mongoose_1.default.model("Etudiant", EtudiantSchema);
 exports.default = Etudiant;
 //# sourceMappingURL=students.js.map

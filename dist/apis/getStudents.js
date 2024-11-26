@@ -1,4 +1,5 @@
 "use strict";
+// routes/students.ts
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -40,8 +41,29 @@ router.post("/api/students", (req, res) => __awaiter(void 0, void 0, void 0, fun
                 delete query[key];
             }
         });
+        // Build the MongoDB query
+        const mongoQuery = {};
+        // Process each field in the query
+        for (const key in query) {
+            if (query[key] !== undefined && query[key] !== null) {
+                if (typeof query[key] === "object") {
+                    // Handle nested fields within arrays
+                    const arrayField = key;
+                    const subQuery = query[key];
+                    const subMongoQuery = {};
+                    Object.keys(subQuery).forEach((subKey) => {
+                        subMongoQuery[subKey] = subQuery[subKey];
+                    });
+                    mongoQuery[arrayField] = { $elemMatch: subMongoQuery };
+                }
+                else {
+                    // Direct fields
+                    mongoQuery[key] = query[key];
+                }
+            }
+        }
         // Query the database with pagination
-        const students = yield students_1.default.find(query).skip(skip).limit(limit);
+        const students = yield students_1.default.find(mongoQuery).skip(skip).limit(limit);
         res.json(students);
     }
     catch (error) {

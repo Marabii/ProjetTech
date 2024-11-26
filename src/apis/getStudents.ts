@@ -1,3 +1,5 @@
+// routes/students.ts
+
 import { Router, Request, Response } from "express";
 import Etudiant from "../models/students";
 
@@ -21,8 +23,32 @@ router.post("/api/students", async (req: Request, res: Response) => {
       }
     });
 
+    // Build the MongoDB query
+    const mongoQuery: any = {};
+
+    // Process each field in the query
+    for (const key in query) {
+      if (query[key] !== undefined && query[key] !== null) {
+        if (typeof query[key] === "object") {
+          // Handle nested fields within arrays
+          const arrayField = key;
+          const subQuery = query[key];
+          const subMongoQuery: any = {};
+
+          Object.keys(subQuery).forEach((subKey) => {
+            subMongoQuery[subKey] = subQuery[subKey];
+          });
+
+          mongoQuery[arrayField] = { $elemMatch: subMongoQuery };
+        } else {
+          // Direct fields
+          mongoQuery[key] = query[key];
+        }
+      }
+    }
+
     // Query the database with pagination
-    const students = await Etudiant.find(query).skip(skip).limit(limit);
+    const students = await Etudiant.find(mongoQuery).skip(skip).limit(limit);
     res.json(students);
   } catch (error) {
     console.error("Error fetching students:", error);

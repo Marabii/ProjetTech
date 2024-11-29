@@ -1,7 +1,8 @@
+import Etudiant from "../models/students";
 import {
   ConventionDeStage,
+  FileProcessorResult,
   IEtudiant,
-  ProcessBddResult,
   SheetData,
   UniversiteVisitant,
 } from "../Interfaces/Interface";
@@ -27,6 +28,7 @@ const requiredSheets: RequiredSheet[] = [
     name: "CONVENTION DE STAGE",
     requiredColumns: [
       "Entité principale - Identifiant OP",
+      "Entité liée - Identifiant OP",
       "Entité liée - Date de début du stage",
       "Entité liée - Date de fin du stage",
       "Entité liée - Fonction occupée",
@@ -45,7 +47,9 @@ const requiredSheets: RequiredSheet[] = [
   },
 ];
 
-export default function processBddFile(bdd: SheetData): ProcessBddResult {
+export default async function processBddFile(
+  bdd: SheetData
+): Promise<FileProcessorResult> {
   const errors: string[] = [];
   const sheetDataMap: { [sheetName: string]: any[] } = {};
 
@@ -117,6 +121,7 @@ export default function processBddFile(bdd: SheetData): ProcessBddResult {
     }
     // Initialize the IEtudiant object
     entitePrincipaleMap[identifiantOP] = {
+      _id: "",
       "Identifiant OP": identifiantOP,
       "Etablissement d'origine": row["Etablissement d'origine"],
       Filière: row["Filière"],
@@ -154,6 +159,7 @@ export default function processBddFile(bdd: SheetData): ProcessBddResult {
       "Date de début du stage": row["Entité liée - Date de début du stage"],
       "Date de fin du stage": row["Entité liée - Date de fin du stage"],
       "Stage Fonction occupée": row["Entité liée - Fonction occupée"],
+      "Entité liée - Identifiant OP": row["Entité liée - Identifiant OP"],
       "Nom Stage": row["Entité liée - Nom"],
     };
 
@@ -205,5 +211,38 @@ export default function processBddFile(bdd: SheetData): ProcessBddResult {
   // Step 7: Prepare the combined data
   const combinedData: IEtudiant[] = Object.values(entitePrincipaleMap);
 
-  return { result: combinedData, errors };
+  // If there are processing errors, return them
+  if (errors.length > 0) {
+    return { message: "something went wrong", errors };
+  }
+
+  if (combinedData.length === 0) {
+    return {
+      message: "No student data to process.",
+      errors: [],
+    };
+  }
+
+  // Prepare bulk operations
+  const bulkOperations = combinedData.map((student: IEtudiant) => ({
+    updateOne: {
+      filter: { "Identifiant OP": student["Identifiant OP"] },
+      update: { $set: student },
+      upsert: true,
+    },
+  }));
+
+  // Execute bulkWrite for efficient upsert operations
+  const result = await Etudiant.bulkWrite(bulkOperations, {
+    ordered: true, // Continue processing even if some operations fail
+  });
+
+  return {
+    message: `Bulk write summary: Matched: ${result.matchedCount}, Modified: ${
+      result.modifiedCount
+    }, Upserted: ${result.upsertedCount}, Total Successful Writes: ${
+      result.modifiedCount + result.upsertedCount
+    }`,
+    errors,
+  };
 }

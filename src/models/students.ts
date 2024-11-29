@@ -4,31 +4,25 @@ import mongoose, { Schema, Model } from "mongoose";
 import { IEtudiant } from "../Interfaces/Interface";
 
 // Define the ConventionDeStage schema
+// models/Etudiant.ts
+
 const ConventionDeStageSchema: Schema = new Schema(
   {
-    "Entité principale - Identifiant OP": {
-      type: String,
-      required: true,
-    },
-    "Date de début du stage": {
-      type: String,
-      required: false,
-    },
-    "Date de fin du stage": {
-      type: String,
-      required: false,
-    },
-    "Stage Fonction occupée": {
-      type: String,
-      required: false,
-    },
-    "Nom Stage": {
-      type: String,
-      required: false,
-    },
+    "Entité liée - Identifiant OP": { type: String, required: true },
+    "Date de début du stage": { type: String, required: false },
+    "Date de fin du stage": { type: String, required: false },
+    "Stage Fonction occupée": { type: String, required: false },
+    "Nom Stage": { type: String, required: false },
+    "Indemnités du stage": { type: String, required: false },
+    Durée: { type: String, required: false },
+    // Fields from 'ENTREPRISE D'ACCUEIL' without 'Entité liée - ' prefix
+    "Code SIRET": { type: String, required: false },
+    Pays: { type: String, required: false },
+    Ville: { type: String, required: false },
+    "Ville (Hors France)": { type: String, required: false },
   },
   { _id: false }
-); // _id: false to prevent creation of subdocument IDs
+);
 
 // Define the UniversiteVisitant schema
 const UniversiteVisitantSchema: Schema = new Schema(

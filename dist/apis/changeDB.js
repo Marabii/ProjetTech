@@ -15,74 +15,82 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = require("express");
 const enums_1 = require("../Interfaces/enums");
-const students_1 = __importDefault(require("../models/students"));
-const processBdd_1 = __importDefault(require("../utilis/processBdd")); // Ensure the correct path
+const processBdd_1 = __importDefault(require("../utilis/processBdd"));
+const processInterships_1 = require("../utilis/processInterships");
 const router = (0, express_1.Router)();
 /**
- * POST /api/server/postStudentData
- * Endpoint to process and save student data.
+ * Utility function to handle error responses
+ */
+const handleErrorResponse = (res, statusCode, message, errors = []) => {
+    res.status(statusCode).json({
+        status: enums_1.Status.failure,
+        message,
+        errors,
+    });
+};
+/**
+ * Handler for processing 'bdd' type data
+ */
+const handleBdd = (data, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const result = yield (0, processBdd_1.default)(data);
+        res.status(200).json({
+            status: enums_1.Status.success,
+            message: result.message,
+            errors: result.errors,
+        });
+    }
+    catch (error) {
+        if (error instanceof Error) {
+            handleErrorResponse(res, 400, error.message, []);
+        }
+        else {
+            handleErrorResponse(res, 500, "An unknown error occurred.", []);
+        }
+    }
+});
+/**
+ * Handler for processing 'stages' type data
+ */
+const handleInternships = (data, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const result = yield (0, processInterships_1.processInternships)(data);
+        res.status(200).json({
+            status: enums_1.Status.success,
+            message: result.message,
+            errors: result.errors,
+        });
+    }
+    catch (error) {
+        if (error instanceof Error) {
+            handleErrorResponse(res, 400, error.message, []);
+        }
+        else {
+            handleErrorResponse(res, 500, "An unknown error occurred.", []);
+        }
+    }
+});
+/**
+ * Main route handler for posting student data
  */
 router.post("/api/server/postStudentData", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { type } = req.query;
     const data = req.body;
-    switch (type) {
+    if (!type || typeof type !== "string") {
+        return handleErrorResponse(res, 400, "Type parameter is required.");
+    }
+    switch (type.toLowerCase()) {
         case "bdd":
-            try {
-                // Process the incoming data
-                const { result, errors } = (0, processBdd_1.default)(data);
-                // If there are processing errors, return them
-                if (errors.length > 0) {
-                    res.status(400).json({ status: enums_1.Status.failure, errors });
-                    return;
-                }
-                if (result.length === 0) {
-                    res.status(200).json({
-                        status: enums_1.Status.success,
-                        message: "No student data to process.",
-                    });
-                    return;
-                }
-                // Prepare bulk operations
-                const bulkOperations = result.map((student) => ({
-                    updateOne: {
-                        filter: { "Identifiant OP": student["Identifiant OP"] },
-                        update: { $set: student },
-                        upsert: true,
-                    },
-                }));
-                // Execute bulkWrite for efficient upsert operations
-                yield students_1.default.bulkWrite(bulkOperations, {
-                    ordered: true, // Continue processing even if some operations fail
-                });
-                // Optionally, you can provide more detailed feedback based on bulkWriteResult
-                res.status(200).json({
-                    status: enums_1.Status.success,
-                });
-                return;
-            }
-            catch (error) {
-                // Handle any unexpected errors during processing or database operations
-                if (error instanceof Error) {
-                    res
-                        .status(500)
-                        .json({ status: enums_1.Status.failure, errors: [error.message] });
-                    return;
-                }
-                else {
-                    res.status(500).json({
-                        status: enums_1.Status.failure,
-                        errors: ["An unknown error occurred."],
-                    });
-                    return;
-                }
-            }
+            yield handleBdd(data, res);
+            break;
+        case "stages":
+            yield handleInternships(data, res);
+            break;
         default:
-            // Handle unsupported 'type' values
-            res.status(400).json({
-                status: enums_1.Status.failure,
-                errors: ["Unsupported type parameter."],
-            });
-            return;
+            handleErrorResponse(res, 400, "Unsupported type parameter.", [
+                "Supported types are 'bdd' and 'stages'.",
+            ]);
+            break;
     }
 }));
 exports.default = router;

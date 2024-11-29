@@ -36,28 +36,21 @@ var __importStar = (this && this.__importStar) || (function () {
 Object.defineProperty(exports, "__esModule", { value: true });
 const mongoose_1 = __importStar(require("mongoose"));
 // Define the ConventionDeStage schema
+// models/Etudiant.ts
 const ConventionDeStageSchema = new mongoose_1.Schema({
-    "Entité principale - Identifiant OP": {
-        type: String,
-        required: true,
-    },
-    "Date de début du stage": {
-        type: String,
-        required: false,
-    },
-    "Date de fin du stage": {
-        type: String,
-        required: false,
-    },
-    "Stage Fonction occupée": {
-        type: String,
-        required: false,
-    },
-    "Nom Stage": {
-        type: String,
-        required: false,
-    },
-}, { _id: false }); // _id: false to prevent creation of subdocument IDs
+    "Entité liée - Identifiant OP": { type: String, required: true },
+    "Date de début du stage": { type: String, required: false },
+    "Date de fin du stage": { type: String, required: false },
+    "Stage Fonction occupée": { type: String, required: false },
+    "Nom Stage": { type: String, required: false },
+    "Indemnités du stage": { type: String, required: false },
+    Durée: { type: String, required: false },
+    // Fields from 'ENTREPRISE D'ACCUEIL' without 'Entité liée - ' prefix
+    "Code SIRET": { type: String, required: false },
+    Pays: { type: String, required: false },
+    Ville: { type: String, required: false },
+    "Ville (Hors France)": { type: String, required: false },
+}, { _id: false });
 // Define the UniversiteVisitant schema
 const UniversiteVisitantSchema = new mongoose_1.Schema({
     "Entité principale - Identifiant OP": {

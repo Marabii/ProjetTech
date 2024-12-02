@@ -26,6 +26,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = require("express");
 const students_1 = __importDefault(require("../models/students"));
+const enums_1 = require("../Interfaces/enums");
 const router = (0, express_1.Router)();
 router.post("/api/students", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
@@ -46,15 +47,10 @@ router.post("/api/students", (req, res) => __awaiter(void 0, void 0, void 0, fun
         // Process each field in the query
         for (const key in query) {
             if (query[key] !== undefined && query[key] !== null) {
-                if (typeof query[key] === "object") {
-                    // Handle nested fields within arrays
-                    const arrayField = key;
+                if (typeof query[key] === "object" && !Array.isArray(query[key])) {
+                    // Handle nested fields within objects
                     const subQuery = query[key];
-                    const subMongoQuery = {};
-                    Object.keys(subQuery).forEach((subKey) => {
-                        subMongoQuery[subKey] = subQuery[subKey];
-                    });
-                    mongoQuery[arrayField] = { $elemMatch: subMongoQuery };
+                    mongoQuery[key] = { $elemMatch: subQuery };
                 }
                 else {
                     // Direct fields
@@ -64,11 +60,24 @@ router.post("/api/students", (req, res) => __awaiter(void 0, void 0, void 0, fun
         }
         // Query the database with pagination
         const students = yield students_1.default.find(mongoQuery).skip(skip).limit(limit);
-        res.json(students);
+        // Construct the success response
+        const response = {
+            status: enums_1.Status.success,
+            message: "Students fetched successfully.",
+            data: students,
+        };
+        res.json(response);
     }
     catch (error) {
         console.error("Error fetching students:", error);
-        res.status(500).send(error);
+        // Construct the error response
+        const response = {
+            status: enums_1.Status.failure,
+            message: "Failed to fetch students.",
+            errors: [error.message || "An unexpected error occurred."],
+            data: null,
+        };
+        res.status(500).json(response);
     }
 }));
 exports.default = router;

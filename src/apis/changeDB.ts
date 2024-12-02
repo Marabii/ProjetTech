@@ -25,7 +25,7 @@ const handleErrorResponse = (
     status: Status.failure,
     message,
     errors,
-  } as ApiResponse);
+  } as ApiResponse<any>);
 };
 
 /**
@@ -38,7 +38,7 @@ const handleBdd = async (data: SheetData, res: Response) => {
       status: Status.success,
       message: result.message,
       errors: result.errors,
-    } as ApiResponse);
+    } as ApiResponse<any>);
   } catch (error: unknown) {
     if (error instanceof Error) {
       handleErrorResponse(res, 400, error.message, []);
@@ -58,7 +58,7 @@ const handleInternships = async (data: SheetData, res: Response) => {
       status: Status.success,
       message: result.message,
       errors: result.errors,
-    } as ApiResponse);
+    } as ApiResponse<any>);
   } catch (error: unknown) {
     if (error instanceof Error) {
       handleErrorResponse(res, 400, error.message, []);

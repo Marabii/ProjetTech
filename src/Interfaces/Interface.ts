@@ -1,9 +1,10 @@
 import { Status } from "./enums";
 
-export interface ApiResponse {
+export interface ApiResponse<T> {
   status: Status;
   message: string;
   errors?: string[];
+  data: T;
 }
 
 export type SheetData = Array<{ [sheetName: string]: any[] }>;

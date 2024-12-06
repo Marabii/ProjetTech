@@ -1,16 +1,11 @@
-import { IEtudiant } from "../Interfaces/Interface";
+import { FileProcessorResult, IEtudiant } from "../Interfaces/Interface";
 import Etudiant from "../models/students";
 
 export type SheetData = Array<{ [sheetName: string]: any[] }>;
 
-interface ProcessInternshipsResult {
-  message: string;
-  errors: string[];
-}
-
 export async function processInternships(
   internships: SheetData
-): Promise<ProcessInternshipsResult> {
+): Promise<FileProcessorResult> {
   const errors: string[] = [];
   let message: string = "";
 

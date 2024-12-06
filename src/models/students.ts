@@ -9,8 +9,8 @@ import { IEtudiant } from "../Interfaces/Interface";
 const ConventionDeStageSchema: Schema = new Schema(
   {
     "Entité liée - Identifiant OP": { type: String, required: true },
-    "Date de début du stage": { type: String, required: false },
-    "Date de fin du stage": { type: String, required: false },
+    "Date de début du stage": { type: Date, required: false },
+    "Date de fin du stage": { type: Date, required: false },
     "Stage Fonction occupée": { type: String, required: false },
     "Nom Stage": { type: String, required: false },
     "Indemnités du stage": { type: String, required: false },
@@ -32,11 +32,11 @@ const UniversiteVisitantSchema: Schema = new Schema(
       required: true,
     },
     "Date de début mobilité": {
-      type: String,
+      type: Date,
       required: false,
     },
     "Date de fin mobilité": {
-      type: String,
+      type: Date,
       required: false,
     },
     "Type Mobilité": {
@@ -46,6 +46,34 @@ const UniversiteVisitantSchema: Schema = new Schema(
     "Nom mobilité": {
       type: String,
       required: false,
+    },
+  },
+  { _id: false }
+);
+
+const MajeureSchema: Schema = new Schema(
+  {
+    nom: {
+      type: String,
+      required: true,
+    },
+    promo: {
+      type: String,
+      required: true,
+    },
+  },
+  { _id: false }
+);
+
+const DéfiEtMajeureSchema: Schema = new Schema(
+  {
+    défi: {
+      type: String,
+      required: true,
+    },
+    majeures: {
+      type: [MajeureSchema],
+      default: [],
     },
   },
   { _id: false }
@@ -86,6 +114,10 @@ const EtudiantSchema: Schema = new Schema(
     "UNIVERSITE visitant": {
       type: [UniversiteVisitantSchema],
       default: undefined, // Makes the array optional
+    },
+    DéfiEtMajeure: {
+      type: DéfiEtMajeureSchema,
+      default: undefined,
     },
   },
   {

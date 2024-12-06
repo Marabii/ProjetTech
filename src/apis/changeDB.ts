@@ -9,6 +9,8 @@ import {
 import { Status } from "../Interfaces/enums";
 import processBddFile from "../utilis/processBdd";
 import { processInternships } from "../utilis/processInterships";
+import processDefis from "../utilis/processDefis";
+import processMajeure from "../utilis/processMajeure";
 
 const router = Router();
 
@@ -25,7 +27,7 @@ const handleErrorResponse = (
     status: Status.failure,
     message,
     errors,
-  } as ApiResponse<any>);
+  } as ApiResponse);
 };
 
 /**
@@ -38,12 +40,12 @@ const handleBdd = async (data: SheetData, res: Response) => {
       status: Status.success,
       message: result.message,
       errors: result.errors,
-    } as ApiResponse<any>);
+    } as ApiResponse);
   } catch (error: unknown) {
     if (error instanceof Error) {
-      handleErrorResponse(res, 400, error.message, []);
+      handleErrorResponse(res, 400, "", [error.message]);
     } else {
-      handleErrorResponse(res, 500, "An unknown error occurred.", []);
+      handleErrorResponse(res, 500, "", ["An unknown error occurred."]);
     }
   }
 };
@@ -58,12 +60,52 @@ const handleInternships = async (data: SheetData, res: Response) => {
       status: Status.success,
       message: result.message,
       errors: result.errors,
-    } as ApiResponse<any>);
+    } as ApiResponse);
   } catch (error: unknown) {
     if (error instanceof Error) {
-      handleErrorResponse(res, 400, error.message, []);
+      handleErrorResponse(res, 400, "", [error.message]);
     } else {
-      handleErrorResponse(res, 500, "An unknown error occurred.", []);
+      handleErrorResponse(res, 500, "", ["An unknown error occurred."]);
+    }
+  }
+};
+
+/**
+ * Handler for processing 'defis' type data
+ */
+const handleDefis = async (data: SheetData, res: Response) => {
+  try {
+    const result: FileProcessorResult = await processDefis(data);
+    res.status(200).json({
+      status: Status.success,
+      message: result.message,
+      errors: result.errors,
+    } as ApiResponse);
+  } catch (error: unknown) {
+    if (error instanceof Error) {
+      handleErrorResponse(res, 400, "", [error.message]);
+    } else {
+      handleErrorResponse(res, 500, "", ["An unknown error occurred."]);
+    }
+  }
+};
+
+/**
+ * Handler for processing 'Majeure' type data
+ */
+const handleMajeure = async (data: SheetData, res: Response) => {
+  try {
+    const result: FileProcessorResult = await processMajeure(data);
+    res.status(200).json({
+      status: Status.success,
+      message: result.message,
+      errors: result.errors,
+    } as ApiResponse);
+  } catch (error: unknown) {
+    if (error instanceof Error) {
+      handleErrorResponse(res, 400, "", [error.message]);
+    } else {
+      handleErrorResponse(res, 500, "", ["An unknown error occurred."]);
     }
   }
 };
@@ -84,15 +126,21 @@ router.post(
     switch (type.toLowerCase()) {
       case "bdd":
         await handleBdd(data, res);
-        break;
+        return;
       case "stages":
         await handleInternships(data, res);
-        break;
+        return;
+      case "defis":
+        await handleDefis(data, res);
+        return;
+      case "majeure":
+        await handleMajeure(data, res);
+        return;
       default:
         handleErrorResponse(res, 400, "Unsupported type parameter.", [
           "Supported types are 'bdd' and 'stages'.",
         ]);
-        break;
+        return;
     }
   }
 );

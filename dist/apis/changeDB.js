@@ -17,6 +17,8 @@ const express_1 = require("express");
 const enums_1 = require("../Interfaces/enums");
 const processBdd_1 = __importDefault(require("../utilis/processBdd"));
 const processInterships_1 = require("../utilis/processInterships");
+const processDefis_1 = __importDefault(require("../utilis/processDefis"));
+const processMajeure_1 = __importDefault(require("../utilis/processMajeure"));
 const router = (0, express_1.Router)();
 /**
  * Utility function to handle error responses
@@ -42,10 +44,10 @@ const handleBdd = (data, res) => __awaiter(void 0, void 0, void 0, function* () 
     }
     catch (error) {
         if (error instanceof Error) {
-            handleErrorResponse(res, 400, error.message, []);
+            handleErrorResponse(res, 400, "", [error.message]);
         }
         else {
-            handleErrorResponse(res, 500, "An unknown error occurred.", []);
+            handleErrorResponse(res, 500, "", ["An unknown error occurred."]);
         }
     }
 });
@@ -63,10 +65,52 @@ const handleInternships = (data, res) => __awaiter(void 0, void 0, void 0, funct
     }
     catch (error) {
         if (error instanceof Error) {
-            handleErrorResponse(res, 400, error.message, []);
+            handleErrorResponse(res, 400, "", [error.message]);
         }
         else {
-            handleErrorResponse(res, 500, "An unknown error occurred.", []);
+            handleErrorResponse(res, 500, "", ["An unknown error occurred."]);
+        }
+    }
+});
+/**
+ * Handler for processing 'defis' type data
+ */
+const handleDefis = (data, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const result = yield (0, processDefis_1.default)(data);
+        res.status(200).json({
+            status: enums_1.Status.success,
+            message: result.message,
+            errors: result.errors,
+        });
+    }
+    catch (error) {
+        if (error instanceof Error) {
+            handleErrorResponse(res, 400, "", [error.message]);
+        }
+        else {
+            handleErrorResponse(res, 500, "", ["An unknown error occurred."]);
+        }
+    }
+});
+/**
+ * Handler for processing 'Majeure' type data
+ */
+const handleMajeure = (data, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const result = yield (0, processMajeure_1.default)(data);
+        res.status(200).json({
+            status: enums_1.Status.success,
+            message: result.message,
+            errors: result.errors,
+        });
+    }
+    catch (error) {
+        if (error instanceof Error) {
+            handleErrorResponse(res, 400, "", [error.message]);
+        }
+        else {
+            handleErrorResponse(res, 500, "", ["An unknown error occurred."]);
         }
     }
 });
@@ -82,15 +126,21 @@ router.post("/api/server/postStudentData", (req, res) => __awaiter(void 0, void 
     switch (type.toLowerCase()) {
         case "bdd":
             yield handleBdd(data, res);
-            break;
+            return;
         case "stages":
             yield handleInternships(data, res);
-            break;
+            return;
+        case "defis":
+            yield handleDefis(data, res);
+            return;
+        case "majeure":
+            yield handleMajeure(data, res);
+            return;
         default:
             handleErrorResponse(res, 400, "Unsupported type parameter.", [
                 "Supported types are 'bdd' and 'stages'.",
             ]);
-            break;
+            return;
     }
 }));
 exports.default = router;

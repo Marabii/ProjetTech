@@ -5,17 +5,19 @@ import Etudiant from "../models/students";
 
 const router = Router();
 
-// Mapping of field names to their actual paths in the schema
+// Corrected Mapping of field names to their actual paths in the schema
 const fieldMappings: { [key: string]: string } = {
+  // Common Search Fields
   "Identifiant OP": "Identifiant OP",
   "Etablissement d'origine": "Etablissement d'origine",
   Filière: "Filière",
   Nationalité: "Nationalité",
   Nom: "Nom",
   Prénom: "Prénom",
+
   // Convention de Stage fields
-  "CONVENTION DE STAGE.Entité principale - Identifiant OP":
-    "CONVENTION DE STAGE.Entité principale - Identifiant OP",
+  "CONVENTION DE STAGE.Entité liée - Identifiant OP":
+    "CONVENTION DE STAGE.Entité liée - Identifiant OP",
   "CONVENTION DE STAGE.Date de début du stage":
     "CONVENTION DE STAGE.Date de début du stage",
   "CONVENTION DE STAGE.Date de fin du stage":
@@ -23,18 +25,37 @@ const fieldMappings: { [key: string]: string } = {
   "CONVENTION DE STAGE.Stage Fonction occupée":
     "CONVENTION DE STAGE.Stage Fonction occupée",
   "CONVENTION DE STAGE.Nom Stage": "CONVENTION DE STAGE.Nom Stage",
+  "CONVENTION DE STAGE.Indemnités du stage":
+    "CONVENTION DE STAGE.Indemnités du stage",
+  "CONVENTION DE STAGE.Durée": "CONVENTION DE STAGE.Durée",
+  "CONVENTION DE STAGE.Code SIRET": "CONVENTION DE STAGE.Code SIRET",
+  "CONVENTION DE STAGE.Pays": "CONVENTION DE STAGE.Pays",
+  "CONVENTION DE STAGE.Ville": "CONVENTION DE STAGE.Ville",
+  "CONVENTION DE STAGE.Ville (Hors France)":
+    "CONVENTION DE STAGE.Ville (Hors France)",
+
   // Universite Visitant fields
-  "UNIVERSITE visitant.Entité principale - Identifiant OP":
-    "UNIVERSITE visitant.Entité principale - Identifiant OP",
   "UNIVERSITE visitant.Date de début mobilité":
     "UNIVERSITE visitant.Date de début mobilité",
   "UNIVERSITE visitant.Date de fin mobilité":
     "UNIVERSITE visitant.Date de fin mobilité",
   "UNIVERSITE visitant.Type Mobilité": "UNIVERSITE visitant.Type Mobilité",
   "UNIVERSITE visitant.Nom mobilité": "UNIVERSITE visitant.Nom mobilité",
+
+  // DéfiEtMajeure fields
+  "DéfiEtMajeure.défi": "DéfiEtMajeure.défi",
+  "DéfiEtMajeure.majeures.nom": "DéfiEtMajeure.majeures.nom",
 };
 
+// Extract allowed fields for validation
 const allowedFields = Object.keys(fieldMappings);
+
+// Fields that correspond to arrays in the schema (used to determine where to $unwind)
+const arrayFields = [
+  "CONVENTION DE STAGE",
+  "UNIVERSITE visitant",
+  "DéfiEtMajeure.majeures",
+];
 
 // GET /api/suggestions?field=FIELD_NAME&query=QUERY_STRING
 router.get("/api/suggestions", async (req: Request, res: Response) => {
@@ -53,48 +74,60 @@ router.get("/api/suggestions", async (req: Request, res: Response) => {
   }
 
   // Build the MongoDB regex query
-  const regex = query ? new RegExp("^" + query, "i") : new RegExp("^", "i"); // Case-insensitive starts with 'query' or any string if query is undefined
+  const regex = query ? new RegExp("^" + query, "i") : new RegExp("^", "i");
 
   try {
-    let suggestions = new Set<string>();
+    let suggestions: string[] = [];
 
-    // Handle nested fields
-    if (decodedField.includes(".")) {
-      const [arrayField, subField] = decodedField.split(".");
+    // Check if field is nested
+    const pathSegments = decodedField.split(".");
+    // Example: "DéfiEtMajeure.majeures.nom" => ["DéfiEtMajeure", "majeures", "nom"]
 
-      // Use aggregation to unwind the array and match
-      const results = await Etudiant.aggregate([
-        { $unwind: `$${arrayField}` },
-        { $match: { [`${arrayField}.${subField}`]: { $regex: regex } } },
-        {
-          $group: {
-            _id: null,
-            values: { $addToSet: `$${arrayField}.${subField}` },
-          },
+    if (pathSegments.length > 1) {
+      // Handle nested fields
+      const pipeline: any[] = [];
+
+      // For each level of nesting that corresponds to an array, we must unwind
+      // We'll build partial paths and check if they match known arrays
+      for (let i = 0; i < pathSegments.length - 1; i++) {
+        const partialPath = pathSegments.slice(0, i + 1).join(".");
+        if (arrayFields.includes(partialPath)) {
+          pipeline.push({ $unwind: `$${partialPath}` });
+        }
+      }
+
+      // Build the final match stage
+      const finalField = pathSegments.join(".");
+      pipeline.push({ $match: { [finalField]: { $regex: regex } } });
+      pipeline.push({
+        $group: {
+          _id: null,
+          values: { $addToSet: `$${finalField}` },
         },
-        { $project: { _id: 0, values: 1 } },
+      });
+      pipeline.push({
+        $project: {
+          _id: 0,
+          values: { $slice: ["$values", 5] },
+        },
+      });
+
+      const results = await Etudiant.aggregate(pipeline);
+      if (results.length > 0) {
+        suggestions = results[0].values;
+      }
+    } else {
+      // For non-nested fields, use aggregation to get distinct values with limit
+      const results = await Etudiant.aggregate([
+        { $match: { [decodedField]: { $regex: regex } } },
+        { $group: { _id: `$${decodedField}` } },
         { $limit: 5 },
       ]);
 
-      if (results.length > 0) {
-        results[0].values.forEach((value: string) => suggestions.add(value));
-      }
-    } else {
-      // Query the database, limited to 5 results
-      const results = await Etudiant.find({ [decodedField]: { $regex: regex } })
-        .limit(5)
-        .select(decodedField + " -_id");
-
-      // Extract unique suggestions
-      results.forEach((item) => {
-        const value = item[decodedField as keyof typeof item];
-        if (value) {
-          suggestions.add(value.toString());
-        }
-      });
+      suggestions = results.map((item) => item._id).filter(Boolean) as string[];
     }
 
-    res.json({ suggestions: Array.from(suggestions) });
+    res.json({ suggestions });
     return;
   } catch (error) {
     console.error("Error fetching suggestions:", error);

@@ -14,6 +14,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.default = processBddFile;
 const students_1 = __importDefault(require("../models/students"));
+const parseExcelDate_1 = require("./parseExcelDate");
 const requiredSheets = [
     {
         name: "Entité principale",
@@ -104,7 +105,6 @@ function processBddFile(bdd) {
             }
             // Initialize the IEtudiant object
             entitePrincipaleMap[identifiantOP] = {
-                _id: "",
                 "Identifiant OP": identifiantOP,
                 "Etablissement d'origine": row["Etablissement d'origine"],
                 Filière: row["Filière"],
@@ -126,11 +126,16 @@ function processBddFile(bdd) {
                 errors.push(`No matching "Entité principale" for "Identifiant OP" "${identifiantOP}" in "CONVENTION DE STAGE" at row ${index + 1}.`);
                 return;
             }
+            // Apply parseExcelDate to date fields
+            const dateDebutSerial = row["Entité liée - Date de début du stage"];
+            const dateFinSerial = row["Entité liée - Date de fin du stage"];
+            const dateDebut = (0, parseExcelDate_1.parseExcelDate)(dateDebutSerial);
+            const dateFin = (0, parseExcelDate_1.parseExcelDate)(dateFinSerial);
             // Rename keys as specified and ensure type conformity
             const renamedRow = {
                 "Entité principale - Identifiant OP": identifiantOP,
-                "Date de début du stage": row["Entité liée - Date de début du stage"],
-                "Date de fin du stage": row["Entité liée - Date de fin du stage"],
+                "Date de début du stage": dateDebut,
+                "Date de fin du stage": dateFin,
                 "Stage Fonction occupée": row["Entité liée - Fonction occupée"],
                 "Entité liée - Identifiant OP": row["Entité liée - Identifiant OP"],
                 "Nom Stage": row["Entité liée - Nom"],
@@ -154,11 +159,16 @@ function processBddFile(bdd) {
                 errors.push(`No matching "Entité principale" for "Identifiant OP" "${identifiantOP}" in "UNIVERSITE visitant" at row ${index + 1}.`);
                 return;
             }
+            // Apply parseExcelDate to date fields
+            const dateDebutMobilitySerial = row["Date de début"];
+            const dateFinMobilitySerial = row["Date de fin"];
+            const dateDebutMobility = (0, parseExcelDate_1.parseExcelDate)(dateDebutMobilitySerial);
+            const dateFinMobility = (0, parseExcelDate_1.parseExcelDate)(dateFinMobilitySerial);
             // Rename keys as specified and ensure type conformity
             const renamedRow = {
                 "Entité principale - Identifiant OP": identifiantOP,
-                "Date de début mobilité": row["Date de début"],
-                "Date de fin mobilité": row["Date de fin"],
+                "Date de début mobilité": dateDebutMobility,
+                "Date de fin mobilité": dateFinMobility,
                 "Type Mobilité": row["Type Mobilité"],
                 "Nom mobilité": row["Entité liée - Nom"],
             };

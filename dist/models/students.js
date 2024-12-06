@@ -39,8 +39,8 @@ const mongoose_1 = __importStar(require("mongoose"));
 // models/Etudiant.ts
 const ConventionDeStageSchema = new mongoose_1.Schema({
     "Entité liée - Identifiant OP": { type: String, required: true },
-    "Date de début du stage": { type: String, required: false },
-    "Date de fin du stage": { type: String, required: false },
+    "Date de début du stage": { type: Date, required: false },
+    "Date de fin du stage": { type: Date, required: false },
     "Stage Fonction occupée": { type: String, required: false },
     "Nom Stage": { type: String, required: false },
     "Indemnités du stage": { type: String, required: false },
@@ -58,11 +58,11 @@ const UniversiteVisitantSchema = new mongoose_1.Schema({
         required: true,
     },
     "Date de début mobilité": {
-        type: String,
+        type: Date,
         required: false,
     },
     "Date de fin mobilité": {
-        type: String,
+        type: Date,
         required: false,
     },
     "Type Mobilité": {
@@ -72,6 +72,26 @@ const UniversiteVisitantSchema = new mongoose_1.Schema({
     "Nom mobilité": {
         type: String,
         required: false,
+    },
+}, { _id: false });
+const MajeureSchema = new mongoose_1.Schema({
+    nom: {
+        type: String,
+        required: true,
+    },
+    promo: {
+        type: String,
+        required: true,
+    },
+}, { _id: false });
+const DéfiEtMajeureSchema = new mongoose_1.Schema({
+    défi: {
+        type: String,
+        required: true,
+    },
+    majeures: {
+        type: [MajeureSchema],
+        default: [],
     },
 }, { _id: false });
 // Define the IEtudiant schema
@@ -108,6 +128,10 @@ const EtudiantSchema = new mongoose_1.Schema({
     "UNIVERSITE visitant": {
         type: [UniversiteVisitantSchema],
         default: undefined, // Makes the array optional
+    },
+    DéfiEtMajeure: {
+        type: DéfiEtMajeureSchema,
+        default: undefined,
     },
 }, {
     timestamps: true, // Optional: adds createdAt and updatedAt fields

@@ -42,24 +42,8 @@ router.post("/api/students", (req, res) => __awaiter(void 0, void 0, void 0, fun
                 delete query[key];
             }
         });
-        // Build the MongoDB query
-        const mongoQuery = {};
-        // Process each field in the query
-        for (const key in query) {
-            if (query[key] !== undefined && query[key] !== null) {
-                if (typeof query[key] === "object" && !Array.isArray(query[key])) {
-                    // Handle nested fields within objects
-                    const subQuery = query[key];
-                    mongoQuery[key] = { $elemMatch: subQuery };
-                }
-                else {
-                    // Direct fields
-                    mongoQuery[key] = query[key];
-                }
-            }
-        }
         // Query the database with pagination
-        const students = yield students_1.default.find(mongoQuery).skip(skip).limit(limit);
+        const students = yield students_1.default.find(query).skip(skip).limit(limit);
         // Construct the success response
         const response = {
             status: enums_1.Status.success,

@@ -7,6 +7,8 @@ import {
   UniversiteVisitant,
 } from "../Interfaces/Interface";
 
+import { parseExcelDate } from "./parseExcelDate";
+
 type RequiredSheet = {
   name: string;
   requiredColumns: string[];
@@ -121,7 +123,6 @@ export default async function processBddFile(
     }
     // Initialize the IEtudiant object
     entitePrincipaleMap[identifiantOP] = {
-      _id: "",
       "Identifiant OP": identifiantOP,
       "Etablissement d'origine": row["Etablissement d'origine"],
       Filière: row["Filière"],
@@ -153,11 +154,17 @@ export default async function processBddFile(
       return;
     }
 
+    // Apply parseExcelDate to date fields
+    const dateDebutSerial = row["Entité liée - Date de début du stage"];
+    const dateFinSerial = row["Entité liée - Date de fin du stage"];
+    const dateDebut = parseExcelDate(dateDebutSerial);
+    const dateFin = parseExcelDate(dateFinSerial);
+
     // Rename keys as specified and ensure type conformity
     const renamedRow: ConventionDeStage = {
       "Entité principale - Identifiant OP": identifiantOP,
-      "Date de début du stage": row["Entité liée - Date de début du stage"],
-      "Date de fin du stage": row["Entité liée - Date de fin du stage"],
+      "Date de début du stage": dateDebut,
+      "Date de fin du stage": dateFin,
       "Stage Fonction occupée": row["Entité liée - Fonction occupée"],
       "Entité liée - Identifiant OP": row["Entité liée - Identifiant OP"],
       "Nom Stage": row["Entité liée - Nom"],
@@ -192,11 +199,17 @@ export default async function processBddFile(
       return;
     }
 
+    // Apply parseExcelDate to date fields
+    const dateDebutMobilitySerial = row["Date de début"];
+    const dateFinMobilitySerial = row["Date de fin"];
+    const dateDebutMobility = parseExcelDate(dateDebutMobilitySerial);
+    const dateFinMobility = parseExcelDate(dateFinMobilitySerial);
+
     // Rename keys as specified and ensure type conformity
     const renamedRow: UniversiteVisitant = {
       "Entité principale - Identifiant OP": identifiantOP,
-      "Date de début mobilité": row["Date de début"],
-      "Date de fin mobilité": row["Date de fin"],
+      "Date de début mobilité": dateDebutMobility,
+      "Date de fin mobilité": dateFinMobility,
       "Type Mobilité": row["Type Mobilité"],
       "Nom mobilité": row["Entité liée - Nom"],
     };

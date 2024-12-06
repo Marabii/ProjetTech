@@ -27,24 +27,8 @@ router.post(
         }
       });
 
-      // Build the MongoDB query
-      const mongoQuery: any = {};
-
-      // Process each field in the query
-      for (const key in query) {
-        if (query[key] !== undefined && query[key] !== null) {
-          if (typeof query[key] === "object" && !Array.isArray(query[key])) {
-            // Handle nested fields within objects
-            const subQuery = query[key];
-            mongoQuery[key] = { $elemMatch: subQuery };
-          } else {
-            // Direct fields
-            mongoQuery[key] = query[key];
-          }
-        }
-      }
       // Query the database with pagination
-      const students = await Etudiant.find(mongoQuery).skip(skip).limit(limit);
+      const students = await Etudiant.find(query).skip(skip).limit(limit);
 
       // Construct the success response
       const response: ApiResponse<typeof students> = {

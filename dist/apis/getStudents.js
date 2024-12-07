@@ -59,7 +59,6 @@ router.post("/api/students", (req, res) => __awaiter(void 0, void 0, void 0, fun
             status: enums_1.Status.failure,
             message: "Failed to fetch students.",
             errors: [error.message || "An unexpected error occurred."],
-            data: null,
         };
         res.status(500).json(response);
     }

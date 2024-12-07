@@ -106,7 +106,7 @@ function processInternships(internships) {
             }
             // Process 'ENTREPRISE D'ACCUEIL' data
             for (const eaRow of entrepriseAccueilData) {
-                const identifiantOP = eaRow["Entité principale - Identifiant OP"];
+                const identifiantOP = String(eaRow["Entité principale - Identifiant OP"]);
                 const codeSiret = eaRow["Entité liée - Code SIRET"];
                 const pays = eaRow["Entité liée - Pays"];
                 const ville = eaRow["Entité liée - Ville"];
@@ -123,7 +123,7 @@ function processInternships(internships) {
                 let updated = false;
                 if (etudiant["CONVENTION DE STAGE"]) {
                     for (const convention of etudiant["CONVENTION DE STAGE"]) {
-                        if (convention["Entité liée - Identifiant OP"] === identifiantOP) {
+                        if (String(convention["Entité liée - Identifiant OP"]) === identifiantOP) {
                             // Strip 'Entité liée - ' from field names and merge data
                             if (codeSiret !== undefined)
                                 convention["Code SIRET"] = codeSiret;

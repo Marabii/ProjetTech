@@ -10,6 +10,7 @@ const port: string | number = process.env.PORT || 3001;
 import getStudents from "./apis/getStudents";
 import changeDB from "./apis/changeDB";
 import getSuggestions from "./apis/getSuggestions";
+import statsRoutes from "./apis/statsRoutes";
 
 import { connectDB } from "./config/database";
 
@@ -31,6 +32,7 @@ app.use(bodyParser.urlencoded({ limit: "50mb", extended: true }));
 app.use(getStudents);
 app.use(changeDB);
 app.use(getSuggestions);
+app.use("/api/stats", statsRoutes);
 
 app.listen(port, () => {
   console.log(`Listening on port ${port}`);

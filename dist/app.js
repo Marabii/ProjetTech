@@ -12,6 +12,7 @@ const port = process.env.PORT || 3001;
 const getStudents_1 = __importDefault(require("./apis/getStudents"));
 const changeDB_1 = __importDefault(require("./apis/changeDB"));
 const getSuggestions_1 = __importDefault(require("./apis/getSuggestions"));
+const statsRoutes_1 = __importDefault(require("./apis/statsRoutes"));
 const database_1 = require("./config/database");
 const app = (0, express_1.default)();
 (0, database_1.connectDB)();
@@ -25,6 +26,7 @@ app.use(body_parser_1.default.urlencoded({ limit: "50mb", extended: true }));
 app.use(getStudents_1.default);
 app.use(changeDB_1.default);
 app.use(getSuggestions_1.default);
+app.use("/api/stats", statsRoutes_1.default);
 app.listen(port, () => {
     console.log(`Listening on port ${port}`);
 });

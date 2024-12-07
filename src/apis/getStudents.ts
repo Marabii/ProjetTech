@@ -3,13 +3,13 @@
 import { Router, Request, Response } from "express";
 import Etudiant from "../models/students";
 import { Status } from "../Interfaces/enums";
-import { ApiResponse } from "../Interfaces/Interface";
+import { ApiResponse, ApiResponseWithData } from "../Interfaces/Interface";
 
 const router = Router();
 
 router.post(
   "/api/students",
-  async (req: Request, res: Response<ApiResponse<any>>) => {
+  async (req: Request, res: Response<ApiResponse>) => {
     try {
       let { page, limit, ...query } = req.body;
 
@@ -31,7 +31,7 @@ router.post(
       const students = await Etudiant.find(query).skip(skip).limit(limit);
 
       // Construct the success response
-      const response: ApiResponse<typeof students> = {
+      const response: ApiResponseWithData<typeof students> = {
         status: Status.success,
         message: "Students fetched successfully.",
         data: students,
@@ -42,11 +42,10 @@ router.post(
       console.error("Error fetching students:", error);
 
       // Construct the error response
-      const response: ApiResponse<null> = {
+      const response: ApiResponse = {
         status: Status.failure,
         message: "Failed to fetch students.",
         errors: [error.message || "An unexpected error occurred."],
-        data: null,
       };
 
       res.status(500).json(response);

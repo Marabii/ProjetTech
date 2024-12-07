@@ -32,6 +32,7 @@ export interface IEtudiant {
  * Represents a Convention de Stage.
  */
 export interface ConventionDeStage {
+  "Entité principale - Identifiant OP": string;
   "Entité liée - Identifiant OP": string;
   "Date de début du stage"?: Date;
   "Date de fin du stage"?: Date;

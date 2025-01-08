@@ -1,5 +1,4 @@
 "use strict";
-// routes/students.ts
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -42,23 +41,29 @@ router.post("/api/students", (req, res) => __awaiter(void 0, void 0, void 0, fun
                 delete query[key];
             }
         });
-        // Query the database with pagination
-        const students = yield students_1.default.find(query).skip(skip).limit(limit);
+        // Execute queries in parallel for efficiency
+        const [students, totalCount] = yield Promise.all([
+            students_1.default.find(query).skip(skip).limit(limit),
+            students_1.default.countDocuments(query),
+        ]);
         // Construct the success response
         const response = {
             status: enums_1.Status.success,
-            message: "Students fetched successfully.",
-            data: students,
+            message: "Étudiants récupérés avec succès.",
+            data: {
+                students, // Mongoose's `find` returns documents with the correct type
+                totalCount,
+            },
         };
         res.json(response);
     }
     catch (error) {
-        console.error("Error fetching students:", error);
+        console.error("Erreur lors de la récupération des étudiants :", error);
         // Construct the error response
         const response = {
             status: enums_1.Status.failure,
-            message: "Failed to fetch students.",
-            errors: [error.message || "An unexpected error occurred."],
+            message: "Échec de la récupération des étudiants.",
+            errors: [error.message || "Une erreur inattendue est survenue."],
         };
         res.status(500).json(response);
     }

@@ -1,15 +1,28 @@
-// routes/students.ts
-
 import { Router, Request, Response } from "express";
 import Etudiant from "../models/students";
 import { Status } from "../Interfaces/enums";
-import { ApiResponse, ApiResponseWithData } from "../Interfaces/Interface";
+import { ApiResponse, IEtudiant } from "../Interfaces/Interface";
+import { Document } from "mongoose";
 
 const router = Router();
 
+interface ApiResponseWithStudentsAndCount {
+  status: Status;
+  message: string;
+  data: {
+    students: (Document<unknown, {}, IEtudiant> &
+      IEtudiant & { _id: string })[];
+    totalCount: number;
+  };
+  errors?: string[];
+}
+
 router.post(
   "/api/students",
-  async (req: Request, res: Response<ApiResponse>) => {
+  async (
+    req: Request,
+    res: Response<ApiResponseWithStudentsAndCount | ApiResponse>
+  ) => {
     try {
       let { page, limit, ...query } = req.body;
 
@@ -27,25 +40,31 @@ router.post(
         }
       });
 
-      // Query the database with pagination
-      const students = await Etudiant.find(query).skip(skip).limit(limit);
+      // Execute queries in parallel for efficiency
+      const [students, totalCount] = await Promise.all([
+        Etudiant.find(query).skip(skip).limit(limit),
+        Etudiant.countDocuments(query),
+      ]);
 
       // Construct the success response
-      const response: ApiResponseWithData<typeof students> = {
+      const response: ApiResponseWithStudentsAndCount = {
         status: Status.success,
-        message: "Students fetched successfully.",
-        data: students,
+        message: "Étudiants récupérés avec succès.",
+        data: {
+          students, // Mongoose's `find` returns documents with the correct type
+          totalCount,
+        },
       };
 
       res.json(response);
     } catch (error: any) {
-      console.error("Error fetching students:", error);
+      console.error("Erreur lors de la récupération des étudiants :", error);
 
       // Construct the error response
       const response: ApiResponse = {
         status: Status.failure,
-        message: "Failed to fetch students.",
-        errors: [error.message || "An unexpected error occurred."],
+        message: "Échec de la récupération des étudiants.",
+        errors: [error.message || "Une erreur inattendue est survenue."],
       };
 
       res.status(500).json(response);

@@ -7,10 +7,10 @@ import {
 } from "../Interfaces/Interface";
 
 /**
- * Processes the "Alpha" sheet data to update the "Majeure" information for students.
+ * Traite les données de la feuille "Alpha" pour mettre à jour les informations "Majeure" des étudiants.
  *
- * @param data - The incoming sheet data containing the "Alpha" sheet.
- * @returns A promise that resolves to a FileProcessorResult indicating the outcome.
+ * @param data - Les données de la feuille entrante contenant la feuille "Alpha".
+ * @returns Une promesse qui résout un FileProcessorResult indiquant le résultat.
  */
 export default async function processMajeure(
   data: SheetData
@@ -18,33 +18,37 @@ export default async function processMajeure(
   const errors: string[] = [];
   let modifiedCount = 0;
 
-  // Step 1: Validate the incoming data structure
+  // Étape 1 : Valider la structure des données entrantes
   if (data.length !== 1) {
-    errors.push("Input data should contain exactly one sheet object.");
+    errors.push(
+      "Les données d'entrée doivent contenir exactement un objet de feuille."
+    );
   }
 
   const sheetObj = data[0];
 
   if (!sheetObj.hasOwnProperty("Alpha")) {
-    errors.push('Missing "Alpha" sheet in input data.');
+    errors.push('Feuille "Alpha" manquante dans les données d\'entrée.');
   }
 
   const alphaData = sheetObj["Alpha"];
 
   if (!Array.isArray(alphaData)) {
-    errors.push('"Alpha" sheet should be an array of objects.');
+    errors.push('La feuille "Alpha" doit être un tableau d\'objets.');
   } else {
     alphaData.forEach((row, index) => {
       const requiredFields = ["Prénom", "Nom", "A", "Majeure"];
       requiredFields.forEach((field) => {
         if (!(field in row)) {
           errors.push(
-            `Row ${index + 1} in "Alpha" sheet is missing the "${field}" field.`
+            `La ligne ${
+              index + 1
+            } dans la feuille "Alpha" est manquante le champ "${field}".`
           );
         }
       });
 
-      // Additional type checks can be added here if necessary
+      // Des vérifications de type supplémentaires peuvent être ajoutées ici si nécessaire
       if (
         typeof row["Prénom"] !== "string" ||
         typeof row["Nom"] !== "string" ||
@@ -52,23 +56,23 @@ export default async function processMajeure(
         typeof row["Majeure"] !== "string"
       ) {
         errors.push(
-          `Row ${
+          `La ligne ${
             index + 1
-          } in "Alpha" sheet has invalid data types for one or more fields.`
+          } dans la feuille "Alpha" a des types de données invalides pour un ou plusieurs champs.`
         );
       }
     });
   }
 
-  // If critical validation errors exist, return early
+  // Si des erreurs de validation critiques existent, retourner immédiatement
   if (errors.length > 0) {
     return {
-      message: "Validation failed with errors.",
+      message: "La validation a échoué avec des erreurs.",
       errors,
     };
   }
 
-  // Step 2: Extract unique "Prénom Nom" pairs from the incoming data
+  // Étape 2 : Extraire les paires uniques "Prénom Nom" des données entrantes
   const namePairs = new Set<string>();
 
   alphaData.forEach((row) => {
@@ -85,15 +89,15 @@ export default async function processMajeure(
 
   if (namePairsArray.length === 0) {
     errors.push(
-      'No valid "Prénom" and "Nom" pairs found in "Alpha" sheet to process.'
+      'Aucune paire valide "Prénom" et "Nom" trouvée dans la feuille "Alpha" à traiter.'
     );
     return {
-      message: "No valid data to process.",
+      message: "Aucune donnée valide à traiter.",
       errors,
     };
   }
 
-  // Step 3: Query the database for matching students
+  // Étape 3 : Interroger la base de données pour les étudiants correspondants
   const orConditions = namePairsArray.map((name) => {
     const [prenom, ...nomParts] = name.split(" ");
     const nom = nomParts.join(" ");
@@ -104,14 +108,16 @@ export default async function processMajeure(
   try {
     matchedStudents = await Etudiant.find({ $or: orConditions }).exec();
   } catch (dbError: any) {
-    errors.push(`Database query failed: ${dbError.message}`);
+    errors.push(
+      `Échec de la requête à la base de données : ${dbError.message}`
+    );
     return {
-      message: "Failed to query the database.",
+      message: "Échec de la requête à la base de données.",
       errors,
     };
   }
 
-  // Step 4: Map "Prénom Nom" to corresponding student documents
+  // Étape 4 : Mapper "Prénom Nom" aux documents étudiants correspondants
   const studentMap: { [key: string]: IEtudiant[] } = {};
 
   matchedStudents.forEach((student) => {
@@ -125,7 +131,7 @@ export default async function processMajeure(
     studentMap[key].push(student);
   });
 
-  // Step 5: Prepare bulk operations for updating and adding "Majeure"
+  // Étape 5 : Préparer les opérations en masse pour mettre à jour et ajouter "Majeure"
   const bulkSetOperations: any[] = [];
   const bulkAddOperations: any[] = [];
 
@@ -141,7 +147,7 @@ export default async function processMajeure(
 
       if (!students || students.length === 0) {
         errors.push(
-          `No matching student found for "Prénom": "${firstName}", "Nom": "${lastName}" at row ${
+          `Aucun étudiant correspondant trouvé pour "Prénom" : "${firstName}", "Nom" : "${lastName}" à la ligne ${
             index + 1
           }.`
         );
@@ -150,16 +156,16 @@ export default async function processMajeure(
 
       if (students.length > 1) {
         errors.push(
-          `Multiple students found for "Prénom": "${firstName}", "Nom": "${lastName}" at row ${
+          `Plusieurs étudiants trouvés pour "Prénom" : "${firstName}", "Nom" : "${lastName}" à la ligne ${
             index + 1
-          }. No update performed.`
+          }. Aucune mise à jour effectuée.`
         );
         return;
       }
 
       const student = students[0];
 
-      // Prepare the update operation to set "promo" if "majeure" exists
+      // Préparer l'opération de mise à jour pour définir "promo" si "majeure" existe
       bulkSetOperations.push({
         updateOne: {
           filter: {
@@ -174,7 +180,7 @@ export default async function processMajeure(
         },
       });
 
-      // Prepare the add operation to add the "majeure" if it doesn't exist
+      // Préparer l'opération d'ajout pour ajouter la "majeure" si elle n'existe pas
       bulkAddOperations.push({
         updateOne: {
           filter: {
@@ -193,54 +199,58 @@ export default async function processMajeure(
       });
     } else {
       errors.push(
-        `Insufficient data to match student at row ${
+        `Données insuffisantes pour identifier l'étudiant à la ligne ${
           index + 1
-        }. "Prénom", "Nom", "A", and "Majeure" are required.`
+        }. Les champs "Prénom", "Nom", "A" et "Majeure" sont requis.`
       );
     }
   });
 
-  // Step 6: Execute bulkWrite for $set operations if any
+  // Étape 6 : Exécuter bulkWrite pour les opérations $set si présentes
   let bulkWriteSetResult: any = null;
   if (bulkSetOperations.length > 0) {
     try {
       bulkWriteSetResult = await Etudiant.bulkWrite(bulkSetOperations, {
-        ordered: false, // Continue processing even if some operations fail
+        ordered: false, // Continuer le traitement même si certaines opérations échouent
       });
       modifiedCount += bulkWriteSetResult.modifiedCount;
     } catch (bulkError: any) {
-      errors.push(`Bulk set write failed: ${bulkError.message}`);
+      errors.push(
+        `Échec de l'écriture en masse pour les mises à jour : ${bulkError.message}`
+      );
     }
   }
 
-  // Step 7: Execute bulkWrite for $addToSet operations if any
+  // Étape 7 : Exécuter bulkWrite pour les opérations $addToSet si présentes
   let bulkWriteAddResult: any = null;
   if (bulkAddOperations.length > 0) {
     try {
       bulkWriteAddResult = await Etudiant.bulkWrite(bulkAddOperations, {
-        ordered: false, // Continue processing even if some operations fail
+        ordered: false, // Continuer le traitement même si certaines opérations échouent
       });
       modifiedCount += bulkWriteAddResult.modifiedCount;
     } catch (bulkError: any) {
-      errors.push(`Bulk add write failed: ${bulkError.message}`);
+      errors.push(
+        `Échec de l'écriture en masse pour les ajouts : ${bulkError.message}`
+      );
     }
   }
 
-  // Step 8: Prepare the result message
+  // Étape 8 : Préparer le message de résultat
   let message = "";
 
   if (bulkWriteSetResult || bulkWriteAddResult) {
-    message += `Successfully modified ${modifiedCount} document(s).`;
+    message += `Modification réussie de ${modifiedCount} document(s).`;
   } else if (bulkSetOperations.length > 0 || bulkAddOperations.length > 0) {
-    message += `Attempted to modify ${
+    message += `Tentative de modification de ${
       bulkSetOperations.length + bulkAddOperations.length
-    } document(s), but encountered errors.`;
+    } document(s), mais des erreurs ont été rencontrées.`;
   } else {
-    message += "No documents were modified.";
+    message += "Aucun document n'a été modifié.";
   }
 
   if (errors.length > 0) {
-    message += ` Encountered ${errors.length} issue(s).`;
+    message += ` A rencontré ${errors.length} problème(s).`;
   }
 
   return {

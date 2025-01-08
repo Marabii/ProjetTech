@@ -10,7 +10,7 @@ export async function processInternships(
   let message: string = "";
 
   try {
-    // Convert internships array into a Map for easier access
+    // Convertir le tableau des stages en une Map pour un accès plus facile
     const sheetsMap = new Map<string, any[]>();
     internships.forEach((sheetObj) => {
       for (const sheetName in sheetObj) {
@@ -22,29 +22,35 @@ export async function processInternships(
     const entrepriseAccueilData = sheetsMap.get("ENTREPRISE D'ACCUEIL");
 
     if (!entitePrincipaleData || !entrepriseAccueilData) {
-      throw new Error("Missing required sheets in internships data");
+      throw new Error(
+        "Feuilles requises manquantes dans les données des stages"
+      );
     }
 
-    // Collect all Identifiant OP values from the internships input data
+    // Collecter toutes les valeurs Identifiant OP des données d'entrée des stages
     const identifiantOPSet = new Set<string>();
 
-    // From 'Entité principale'
+    // Depuis 'Entité principale'
     for (const epRow of entitePrincipaleData) {
       const identifiantOP = epRow["Identifiant OP"];
       if (identifiantOP) {
         identifiantOPSet.add(identifiantOP);
       } else {
-        errors.push("Missing Identifiant OP in Entité principale row.");
+        errors.push(
+          "Identifiant OP manquant dans la ligne de l'Entité principale."
+        );
       }
     }
 
     if (identifiantOPSet.size === 0) {
-      errors.push("No valid Identifiant OP values found in input data.");
-      message = "Processing complete with errors.";
+      errors.push(
+        "Aucune valeur Identifiant OP valide trouvée dans les données d'entrée."
+      );
+      message = "Traitement terminé avec des erreurs.";
       return { message, errors };
     }
 
-    // Query the database once to get all relevant Etudiant documents
+    // Interroger la base de données une seule fois pour obtenir tous les documents Etudiant pertinents
     const identifiantOPArray = Array.from(identifiantOPSet);
     const etudiants = await Etudiant.find({
       "CONVENTION DE STAGE.Entité liée - Identifiant OP": {
@@ -54,13 +60,13 @@ export async function processInternships(
 
     if (etudiants.length === 0) {
       errors.push(
-        "No Etudiant found with matching Entité liée - Identifiant OP in CONVENTION DE STAGE."
+        "Aucun Etudiant trouvé avec un Identifiant OP correspondant dans CONVENTION DE STAGE."
       );
-      message = "Processing complete with errors.";
+      message = "Traitement terminé avec des erreurs.";
       return { message, errors };
     }
 
-    // Build a mapping from Identifiant OP to Etudiant documents
+    // Construire une map de Identifiant OP vers les documents Etudiant
     const etudiantMap = new Map<string, any>();
 
     for (const etudiant of etudiants) {
@@ -76,7 +82,7 @@ export async function processInternships(
 
     const updatedEtudiantIds = new Set<string>();
 
-    // Process 'Entité principale' data
+    // Traiter les données de 'Entité principale'
     for (const epRow of entitePrincipaleData) {
       const identifiantOP = String(epRow["Identifiant OP"]);
       const indemnitesDuStage = epRow["Indemnités du stage"];
@@ -85,7 +91,9 @@ export async function processInternships(
       const etudiant: IEtudiant = etudiantMap.get(identifiantOP);
 
       if (!etudiant) {
-        errors.push(`No Etudiant found for Identifiant OP: ${identifiantOP}`);
+        errors.push(
+          `Aucun Etudiant trouvé pour l'Identifiant OP : ${identifiantOP}`
+        );
         continue;
       }
 
@@ -93,7 +101,7 @@ export async function processInternships(
       if (etudiant["CONVENTION DE STAGE"]) {
         for (const convention of etudiant["CONVENTION DE STAGE"]) {
           if (convention["Entité liée - Identifiant OP"] === identifiantOP) {
-            // Merge data into the convention
+            // Fusionner les données dans la convention
             if (indemnitesDuStage !== undefined)
               convention["Indemnités du stage"] = indemnitesDuStage;
             if (duree !== undefined) convention["Durée"] = duree;
@@ -107,12 +115,12 @@ export async function processInternships(
         updatedEtudiantIds.add(etudiant._id.toString());
       } else {
         errors.push(
-          `No matching CONVENTION DE STAGE entry found in Etudiant for Entité liée - Identifiant OP: ${identifiantOP}`
+          `Aucune entrée CONVENTION DE STAGE correspondante trouvée dans Etudiant pour l'Identifiant OP de l'Entité liée : ${identifiantOP}`
         );
       }
     }
 
-    // Process 'ENTREPRISE D'ACCUEIL' data
+    // Traiter les données de 'ENTREPRISE D'ACCUEIL'
     for (const eaRow of entrepriseAccueilData) {
       const identifiantOP: string = String(
         eaRow["Entité principale - Identifiant OP"]
@@ -122,14 +130,16 @@ export async function processInternships(
       const ville = eaRow["Entité liée - Ville"];
       const villeHorsFrance = eaRow["Entité liée - Ville (Hors France)"];
       if (!identifiantOP) {
-        // Already reported missing Identifiant OP
+        // Déjà signalé Identifiant OP manquant
         continue;
       }
 
       const etudiant = etudiantMap.get(identifiantOP);
 
       if (!etudiant) {
-        errors.push(`No Etudiant found for Identifiant OP: ${identifiantOP}`);
+        errors.push(
+          `Aucun Etudiant trouvé pour l'Identifiant OP : ${identifiantOP}`
+        );
         continue;
       }
 
@@ -140,7 +150,7 @@ export async function processInternships(
           if (
             String(convention["Entité liée - Identifiant OP"]) === identifiantOP
           ) {
-            // Strip 'Entité liée - ' from field names and merge data
+            // Retirer 'Entité liée - ' des noms de champs et fusionner les données
             if (codeSiret !== undefined) convention["Code SIRET"] = codeSiret;
             if (pays !== undefined) convention["Pays"] = pays;
             if (ville !== undefined) convention["Ville"] = ville;
@@ -156,12 +166,12 @@ export async function processInternships(
         updatedEtudiantIds.add(etudiant._id.toString());
       } else {
         errors.push(
-          `No matching CONVENTION DE STAGE entry found in Etudiant for Entité liée - Identifiant OP: ${identifiantOP}`
+          `Aucune entrée CONVENTION DE STAGE correspondante trouvée dans Etudiant pour l'Identifiant OP de l'Entité liée : ${identifiantOP}`
         );
       }
     }
 
-    // Prepare bulk write operations for updated Etudiants
+    // Préparer les opérations d'écriture en masse pour les Etudiants mis à jour
     const bulkOps = [];
 
     for (const etudiantId of updatedEtudiantIds) {
@@ -175,15 +185,15 @@ export async function processInternships(
         });
       }
     }
-    // Execute bulk update
+    // Exécuter l'écriture en masse
     if (bulkOps.length > 0) {
       await Etudiant.bulkWrite(bulkOps);
     }
 
     const updatedCount = updatedEtudiantIds.size;
-    message = `Processing complete. Updated ${updatedCount} student(s).`;
+    message = `Traitement terminé. ${updatedCount} étudiant(s) mis à jour.`;
   } catch (err) {
-    errors.push(`Error: ${err.message}`);
+    errors.push(`Erreur : ${err.message}`);
   }
 
   return { message, errors };

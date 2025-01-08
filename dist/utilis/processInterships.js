@@ -19,7 +19,7 @@ function processInternships(internships) {
         const errors = [];
         let message = "";
         try {
-            // Convert internships array into a Map for easier access
+            // Convertir le tableau des stages en une Map pour un accès plus facile
             const sheetsMap = new Map();
             internships.forEach((sheetObj) => {
                 for (const sheetName in sheetObj) {
@@ -29,26 +29,26 @@ function processInternships(internships) {
             const entitePrincipaleData = sheetsMap.get("Entité principale");
             const entrepriseAccueilData = sheetsMap.get("ENTREPRISE D'ACCUEIL");
             if (!entitePrincipaleData || !entrepriseAccueilData) {
-                throw new Error("Missing required sheets in internships data");
+                throw new Error("Feuilles requises manquantes dans les données des stages");
             }
-            // Collect all Identifiant OP values from the internships input data
+            // Collecter toutes les valeurs Identifiant OP des données d'entrée des stages
             const identifiantOPSet = new Set();
-            // From 'Entité principale'
+            // Depuis 'Entité principale'
             for (const epRow of entitePrincipaleData) {
                 const identifiantOP = epRow["Identifiant OP"];
                 if (identifiantOP) {
                     identifiantOPSet.add(identifiantOP);
                 }
                 else {
-                    errors.push("Missing Identifiant OP in Entité principale row.");
+                    errors.push("Identifiant OP manquant dans la ligne de l'Entité principale.");
                 }
             }
             if (identifiantOPSet.size === 0) {
-                errors.push("No valid Identifiant OP values found in input data.");
-                message = "Processing complete with errors.";
+                errors.push("Aucune valeur Identifiant OP valide trouvée dans les données d'entrée.");
+                message = "Traitement terminé avec des erreurs.";
                 return { message, errors };
             }
-            // Query the database once to get all relevant Etudiant documents
+            // Interroger la base de données une seule fois pour obtenir tous les documents Etudiant pertinents
             const identifiantOPArray = Array.from(identifiantOPSet);
             const etudiants = yield students_1.default.find({
                 "CONVENTION DE STAGE.Entité liée - Identifiant OP": {
@@ -56,11 +56,11 @@ function processInternships(internships) {
                 },
             });
             if (etudiants.length === 0) {
-                errors.push("No Etudiant found with matching Entité liée - Identifiant OP in CONVENTION DE STAGE.");
-                message = "Processing complete with errors.";
+                errors.push("Aucun Etudiant trouvé avec un Identifiant OP correspondant dans CONVENTION DE STAGE.");
+                message = "Traitement terminé avec des erreurs.";
                 return { message, errors };
             }
-            // Build a mapping from Identifiant OP to Etudiant documents
+            // Construire une map de Identifiant OP vers les documents Etudiant
             const etudiantMap = new Map();
             for (const etudiant of etudiants) {
                 if (etudiant["CONVENTION DE STAGE"]) {
@@ -73,21 +73,21 @@ function processInternships(internships) {
                 }
             }
             const updatedEtudiantIds = new Set();
-            // Process 'Entité principale' data
+            // Traiter les données de 'Entité principale'
             for (const epRow of entitePrincipaleData) {
                 const identifiantOP = String(epRow["Identifiant OP"]);
                 const indemnitesDuStage = epRow["Indemnités du stage"];
                 const duree = epRow["Durée"];
                 const etudiant = etudiantMap.get(identifiantOP);
                 if (!etudiant) {
-                    errors.push(`No Etudiant found for Identifiant OP: ${identifiantOP}`);
+                    errors.push(`Aucun Etudiant trouvé pour l'Identifiant OP : ${identifiantOP}`);
                     continue;
                 }
                 let updated = false;
                 if (etudiant["CONVENTION DE STAGE"]) {
                     for (const convention of etudiant["CONVENTION DE STAGE"]) {
                         if (convention["Entité liée - Identifiant OP"] === identifiantOP) {
-                            // Merge data into the convention
+                            // Fusionner les données dans la convention
                             if (indemnitesDuStage !== undefined)
                                 convention["Indemnités du stage"] = indemnitesDuStage;
                             if (duree !== undefined)
@@ -101,10 +101,10 @@ function processInternships(internships) {
                     updatedEtudiantIds.add(etudiant._id.toString());
                 }
                 else {
-                    errors.push(`No matching CONVENTION DE STAGE entry found in Etudiant for Entité liée - Identifiant OP: ${identifiantOP}`);
+                    errors.push(`Aucune entrée CONVENTION DE STAGE correspondante trouvée dans Etudiant pour l'Identifiant OP de l'Entité liée : ${identifiantOP}`);
                 }
             }
-            // Process 'ENTREPRISE D'ACCUEIL' data
+            // Traiter les données de 'ENTREPRISE D'ACCUEIL'
             for (const eaRow of entrepriseAccueilData) {
                 const identifiantOP = String(eaRow["Entité principale - Identifiant OP"]);
                 const codeSiret = eaRow["Entité liée - Code SIRET"];
@@ -112,19 +112,19 @@ function processInternships(internships) {
                 const ville = eaRow["Entité liée - Ville"];
                 const villeHorsFrance = eaRow["Entité liée - Ville (Hors France)"];
                 if (!identifiantOP) {
-                    // Already reported missing Identifiant OP
+                    // Déjà signalé Identifiant OP manquant
                     continue;
                 }
                 const etudiant = etudiantMap.get(identifiantOP);
                 if (!etudiant) {
-                    errors.push(`No Etudiant found for Identifiant OP: ${identifiantOP}`);
+                    errors.push(`Aucun Etudiant trouvé pour l'Identifiant OP : ${identifiantOP}`);
                     continue;
                 }
                 let updated = false;
                 if (etudiant["CONVENTION DE STAGE"]) {
                     for (const convention of etudiant["CONVENTION DE STAGE"]) {
                         if (String(convention["Entité liée - Identifiant OP"]) === identifiantOP) {
-                            // Strip 'Entité liée - ' from field names and merge data
+                            // Retirer 'Entité liée - ' des noms de champs et fusionner les données
                             if (codeSiret !== undefined)
                                 convention["Code SIRET"] = codeSiret;
                             if (pays !== undefined)
@@ -142,10 +142,10 @@ function processInternships(internships) {
                     updatedEtudiantIds.add(etudiant._id.toString());
                 }
                 else {
-                    errors.push(`No matching CONVENTION DE STAGE entry found in Etudiant for Entité liée - Identifiant OP: ${identifiantOP}`);
+                    errors.push(`Aucune entrée CONVENTION DE STAGE correspondante trouvée dans Etudiant pour l'Identifiant OP de l'Entité liée : ${identifiantOP}`);
                 }
             }
-            // Prepare bulk write operations for updated Etudiants
+            // Préparer les opérations d'écriture en masse pour les Etudiants mis à jour
             const bulkOps = [];
             for (const etudiantId of updatedEtudiantIds) {
                 const etudiant = etudiants.find((e) => e._id.toString() === etudiantId);
@@ -158,15 +158,15 @@ function processInternships(internships) {
                     });
                 }
             }
-            // Execute bulk update
+            // Exécuter l'écriture en masse
             if (bulkOps.length > 0) {
                 yield students_1.default.bulkWrite(bulkOps);
             }
             const updatedCount = updatedEtudiantIds.size;
-            message = `Processing complete. Updated ${updatedCount} student(s).`;
+            message = `Traitement terminé. ${updatedCount} étudiant(s) mis à jour.`;
         }
         catch (err) {
-            errors.push(`Error: ${err.message}`);
+            errors.push(`Erreur : ${err.message}`);
         }
         return { message, errors };
     });

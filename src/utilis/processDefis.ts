@@ -7,52 +7,54 @@ import {
 } from "../Interfaces/Interface";
 
 /**
- * Processes the "Alpha" sheet data to update the "Défi" field for students.
+ * Traite les données de la feuille "Alpha" pour mettre à jour le champ "Défi" des étudiants.
  *
- * @param data - The incoming sheet data containing the "Alpha" sheet.
- * @returns A promise that resolves to a FileProcessorResult indicating the outcome.
+ * @param data - Les données de la feuille entrante contenant la feuille "Alpha".
+ * @returns Une promesse qui résout un FileProcessorResult indiquant le résultat.
  */
 export default async function processDefis(
   data: SheetData
 ): Promise<FileProcessorResult> {
   const errors: string[] = [];
 
-  // Step 1: Validate the incoming data structure
+  // Étape 1 : Valider la structure des données entrantes
   if (data.length !== 1) {
-    errors.push("Input data should contain exactly one sheet object.");
+    errors.push(
+      "Les données d'entrée doivent contenir exactement un objet de feuille."
+    );
   }
 
   const sheetObj = data[0];
 
   if (!sheetObj.hasOwnProperty("Alpha")) {
-    errors.push('Missing "Alpha" sheet in input data.');
+    errors.push('Feuille "Alpha" manquante dans les données d\'entrée.');
   }
 
   const alphaData = sheetObj["Alpha"];
 
   if (!Array.isArray(alphaData)) {
-    errors.push('"Alpha" sheet should be an array of objects.');
+    errors.push('La feuille "Alpha" doit être un tableau d\'objets.');
   } else {
     alphaData.forEach((row, index) => {
       if (!("Prénom" in row || "Nom" in row || "Défi" in row)) {
         errors.push(
-          `Row ${
+          `La ligne ${
             index + 1
-          } in "Alpha" sheet must have at least one of "Prénom", "Nom", or "Défi".`
+          } dans la feuille "Alpha" doit contenir au moins l'un des champs "Prénom", "Nom" ou "Défi".`
         );
       }
     });
   }
 
-  // If critical validation errors exist, return early
+  // Si des erreurs de validation critiques existent, retourner immédiatement
   if (errors.length > 0) {
     return {
-      message: "Validation failed with errors.",
+      message: "La validation a échoué avec des erreurs.",
       errors,
     };
   }
 
-  // Step 2: Extract unique "Prénom Nom" pairs from the incoming data
+  // Étape 2 : Extraire les paires uniques "Prénom Nom" des données entrantes
   const namePairs = new Set<string>();
 
   alphaData.forEach((row) => {
@@ -69,15 +71,15 @@ export default async function processDefis(
 
   if (namePairsArray.length === 0) {
     errors.push(
-      'No valid "Prénom" and "Nom" pairs found in "Alpha" sheet to process.'
+      'Aucune paire valide "Prénom" et "Nom" trouvée dans la feuille "Alpha" à traiter.'
     );
     return {
-      message: "No valid data to process.",
+      message: "Aucune donnée valide à traiter.",
       errors,
     };
   }
 
-  // Step 3: Query the database for matching students
+  // Étape 3 : Interroger la base de données pour les étudiants correspondants
   const orConditions = namePairsArray.map((name) => {
     const [prenom, ...nomParts] = name.split(" ");
     const nom = nomParts.join(" ");
@@ -88,14 +90,16 @@ export default async function processDefis(
   try {
     matchedStudents = await Etudiant.find({ $or: orConditions }).exec();
   } catch (dbError: any) {
-    errors.push(`Database query failed: ${dbError.message}`);
+    errors.push(
+      `Échec de la requête à la base de données : ${dbError.message}`
+    );
     return {
-      message: "Failed to query the database.",
+      message: "Échec de la requête à la base de données.",
       errors,
     };
   }
 
-  // Step 4: Map "Prénom Nom" to corresponding student documents
+  // Étape 4 : Mapper "Prénom Nom" aux documents étudiants correspondants
   const studentMap: { [key: string]: IEtudiant[] } = {};
 
   matchedStudents.forEach((student) => {
@@ -109,7 +113,7 @@ export default async function processDefis(
     studentMap[key].push(student);
   });
 
-  // Step 5: Prepare bulk operations for updating "Défi"
+  // Étape 5 : Préparer les opérations en masse pour mettre à jour "Défi"
   const bulkOperations: any[] = [];
 
   alphaData.forEach((row, index) => {
@@ -123,7 +127,7 @@ export default async function processDefis(
 
       if (!students || students.length === 0) {
         errors.push(
-          `No matching student found for "Prénom": "${firstName}", "Nom": "${lastName}" at row ${
+          `Aucun étudiant correspondant trouvé pour "Prénom" : "${firstName}", "Nom" : "${lastName}" à la ligne ${
             index + 1
           }.`
         );
@@ -132,16 +136,16 @@ export default async function processDefis(
 
       if (students.length > 1) {
         errors.push(
-          `Multiple students found for "Prénom": "${firstName}", "Nom": "${lastName}" at row ${
+          `Plusieurs étudiants trouvés pour "Prénom" : "${firstName}", "Nom" : "${lastName}" à la ligne ${
             index + 1
-          }. No update performed.`
+          }. Aucune mise à jour effectuée.`
         );
         return;
       }
 
       if (!defi) {
         errors.push(
-          `No "Défi" provided for "Prénom": "${firstName}", "Nom": "${lastName}" at row ${
+          `Aucun "Défi" fourni pour "Prénom" : "${firstName}", "Nom" : "${lastName}" à la ligne ${
             index + 1
           }.`
         );
@@ -158,38 +162,38 @@ export default async function processDefis(
       });
     } else {
       errors.push(
-        `Insufficient data to match student at row ${
+        `Données insuffisantes pour identifier l'étudiant à la ligne ${
           index + 1
-        }. Both "Prénom" and "Nom" are required.`
+        }. Les champs "Prénom" et "Nom" sont requis.`
       );
     }
   });
 
-  // Step 6: Execute bulkWrite if there are operations to perform
+  // Étape 6 : Exécuter bulkWrite s'il y a des opérations à effectuer
   let bulkWriteResult: any = null;
   if (bulkOperations.length > 0) {
     try {
       bulkWriteResult = await Etudiant.bulkWrite(bulkOperations, {
-        ordered: false, // Continue processing even if some operations fail
+        ordered: false, // Continuer le traitement même si certaines opérations échouent
       });
     } catch (bulkError: any) {
-      errors.push(`Bulk write failed: ${bulkError.message}`);
+      errors.push(`Échec de l'écriture en masse : ${bulkError.message}`);
     }
   }
 
-  // Step 7: Prepare the result message
+  // Étape 7 : Préparer le message de résultat
   let message = "";
 
   if (bulkWriteResult) {
-    message += `Successfully modified ${bulkWriteResult.modifiedCount} document(s).`;
+    message += `Modification réussie de ${bulkWriteResult.modifiedCount} document(s).`;
   } else if (bulkOperations.length > 0) {
-    message += `Attempted to modify ${bulkOperations.length} document(s), but encountered errors.`;
+    message += `Tentative de modification de ${bulkOperations.length} document(s), mais des erreurs ont été rencontrées.`;
   } else {
-    message += "No documents were modified.";
+    message += "Aucun document n'a été modifié.";
   }
 
   if (errors.length > 0) {
-    message += ` Encountered ${errors.length} issue(s).`;
+    message += ` A rencontré ${errors.length} problème(s).`;
   }
 
   return {

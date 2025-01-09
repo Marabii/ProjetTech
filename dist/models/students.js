@@ -50,6 +50,7 @@ const ConventionDeStageSchema = new mongoose_1.Schema({
     Pays: { type: String, required: false },
     Ville: { type: String, required: false },
     "Ville (Hors France)": { type: String, required: false },
+    "ENTREPRISE DE STAGE": { type: String, required: false },
 }, { _id: false });
 // Define the UniversiteVisitant schema
 const UniversiteVisitantSchema = new mongoose_1.Schema({

@@ -1,7 +1,6 @@
 import { FileProcessorResult, IEtudiant } from "../Interfaces/Interface";
 import Etudiant from "../models/students";
-
-export type SheetData = Array<{ [sheetName: string]: any[] }>;
+import type { SheetData } from "../Interfaces/Interface";
 
 export async function processInternships(
   internships: SheetData
@@ -129,6 +128,8 @@ export async function processInternships(
       const pays = eaRow["Entité liée - Pays"];
       const ville = eaRow["Entité liée - Ville"];
       const villeHorsFrance = eaRow["Entité liée - Ville (Hors France)"];
+      const internshipCompany = eaRow["Entité liée - Nom"];
+
       if (!identifiantOP) {
         // Déjà signalé Identifiant OP manquant
         continue;
@@ -154,6 +155,8 @@ export async function processInternships(
             if (codeSiret !== undefined) convention["Code SIRET"] = codeSiret;
             if (pays !== undefined) convention["Pays"] = pays;
             if (ville !== undefined) convention["Ville"] = ville;
+            if (internshipCompany !== undefined)
+              convention["ENTREPRISE DE STAGE"] = internshipCompany;
             if (villeHorsFrance !== undefined)
               convention["Ville (Hors France)"] = villeHorsFrance;
             updated = true;

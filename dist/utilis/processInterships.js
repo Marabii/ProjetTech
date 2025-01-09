@@ -111,6 +111,7 @@ function processInternships(internships) {
                 const pays = eaRow["Entité liée - Pays"];
                 const ville = eaRow["Entité liée - Ville"];
                 const villeHorsFrance = eaRow["Entité liée - Ville (Hors France)"];
+                const internshipCompany = eaRow["Entité liée - Nom"];
                 if (!identifiantOP) {
                     // Déjà signalé Identifiant OP manquant
                     continue;
@@ -131,6 +132,8 @@ function processInternships(internships) {
                                 convention["Pays"] = pays;
                             if (ville !== undefined)
                                 convention["Ville"] = ville;
+                            if (internshipCompany !== undefined)
+                                convention["ENTREPRISE DE STAGE"] = internshipCompany;
                             if (villeHorsFrance !== undefined)
                                 convention["Ville (Hors France)"] = villeHorsFrance;
                             updated = true;

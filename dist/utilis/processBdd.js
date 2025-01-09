@@ -49,7 +49,7 @@ const requiredSheets = [
         ],
     },
 ];
-function processBddFile(bdd) {
+function processBddFile(bdd, graduationYear) {
     return __awaiter(this, void 0, void 0, function* () {
         const errors = [];
         const sheetDataMap = {};
@@ -111,6 +111,7 @@ function processBddFile(bdd) {
                 Nationalité: row["Nationalité"],
                 Nom: row["Nom"],
                 Prénom: row["Prénom"],
+                "ANNÉE DE DIPLOMATION": graduationYear,
             };
         });
         // Étape 5 : Traiter "CONVENTION DE STAGE"

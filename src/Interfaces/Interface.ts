@@ -23,6 +23,7 @@ export interface IEtudiant {
   Nationalité?: string;
   Nom?: string;
   Prénom?: string;
+  "ANNÉE DE DIPLOMATION": number;
   "CONVENTION DE STAGE"?: ConventionDeStage[]; // Optional array
   "UNIVERSITE visitant"?: UniversiteVisitant[]; // Optional array
   DéfiEtMajeure?: DéfiEtMajeure; // Optional field

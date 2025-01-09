@@ -50,7 +50,8 @@ const requiredSheets: RequiredSheet[] = [
 ];
 
 export default async function processBddFile(
-  bdd: SheetData
+  bdd: SheetData,
+  graduationYear: number
 ): Promise<FileProcessorResult> {
   const errors: string[] = [];
   const sheetDataMap: { [sheetName: string]: any[] } = {};
@@ -133,6 +134,7 @@ export default async function processBddFile(
       Nationalité: row["Nationalité"],
       Nom: row["Nom"],
       Prénom: row["Prénom"],
+      "ANNÉE DE DIPLOMATION": graduationYear,
     };
   });
 

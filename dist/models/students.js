@@ -121,6 +121,10 @@ const EtudiantSchema = new mongoose_1.Schema({
         type: String,
         required: false,
     },
+    "ANNÉE DE DIPLOMATION": {
+        type: String,
+        required: true,
+    },
     "CONVENTION DE STAGE": {
         type: [ConventionDeStageSchema],
         default: undefined, // Makes the array optional

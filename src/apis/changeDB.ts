@@ -33,9 +33,16 @@ const handleErrorResponse = (
 /**
  * Handler for processing 'bdd' type data
  */
-const handleBdd = async (data: SheetData, res: Response) => {
+const handleBdd = async (
+  data: SheetData,
+  graduationYear: number,
+  res: Response
+) => {
   try {
-    const result: FileProcessorResult = await processBddFile(data);
+    const result: FileProcessorResult = await processBddFile(
+      data,
+      graduationYear
+    );
     res.status(200).json({
       status: Status.success,
       message: result.message,
@@ -116,16 +123,43 @@ const handleMajeure = async (data: SheetData, res: Response) => {
 router.post(
   "/api/server/postStudentData",
   async (req: Request, res: Response) => {
-    const { type } = req.query;
+    const { type, graduationYearQuery } = req.query;
     const data = req.body as SheetData;
-
+    let graduationYear: number | null;
+    // Validate `type`
     if (!type || typeof type !== "string") {
       return handleErrorResponse(res, 400, "Type parameter is required.");
     }
 
+    // Validate `graduationYearQuery` if type is bdd
+    if (type.toLocaleLowerCase() === "bdd") {
+      if (!graduationYearQuery)
+        return handleErrorResponse(res, 400, "Graduation year is missing");
+
+      const currentYear = new Date().getFullYear();
+      const yearAsNumber = Number(graduationYearQuery);
+
+      if (
+        isNaN(yearAsNumber) || // Graduation year must be a number
+        yearAsNumber < currentYear - 30 || // Cannot be earlier than 30 years ago
+        yearAsNumber > currentYear // Cannot be later than the current year
+      ) {
+        return handleErrorResponse(
+          res,
+          400,
+          `GraduationYearQuery must be a number between ${
+            currentYear - 30
+          } and ${currentYear} if provided.`
+        );
+      }
+
+      graduationYear = yearAsNumber;
+    }
+
+    // Handle different types
     switch (type.toLowerCase()) {
       case "bdd":
-        await handleBdd(data, res);
+        await handleBdd(data, graduationYear, res);
         return;
       case "stages":
         await handleInternships(data, res);
@@ -138,7 +172,7 @@ router.post(
         return;
       default:
         handleErrorResponse(res, 400, "Unsupported type parameter.", [
-          "Supported types are 'bdd' and 'stages'.",
+          "Supported types are 'bdd', 'stages', 'defis', and 'majeure'.",
         ]);
         return;
     }

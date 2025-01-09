@@ -30,9 +30,11 @@ const router = (0, express_1.Router)();
 router.post("/api/students", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         let _a = req.body, { page, limit } = _a, query = __rest(_a, ["page", "limit"]);
+        let { sortingOrder } = req.query;
         // Set default values if none are provided
         page = page || 1;
         limit = limit || 20;
+        sortingOrder = sortingOrder || "decreasing";
         // Calculate the skipping number
         const skip = (page - 1) * limit;
         // Filter out empty string values
@@ -41,9 +43,14 @@ router.post("/api/students", (req, res) => __awaiter(void 0, void 0, void 0, fun
                 delete query[key];
             }
         });
+        // Determine the sorting order
+        const sortOrder = sortingOrder === "increasing" ? 1 : -1;
         // Execute queries in parallel for efficiency
         const [students, totalCount] = yield Promise.all([
-            students_1.default.find(query).skip(skip).limit(limit),
+            students_1.default.find(query)
+                .skip(skip)
+                .limit(limit)
+                .sort({ "ANNÉE DE DIPLOMATION": sortOrder }),
             students_1.default.countDocuments(query),
         ]);
         // Construct the success response

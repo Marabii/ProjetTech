@@ -10,6 +10,7 @@ const fieldMappings: { [key: string]: string } = {
   // Common Search Fields
   "Identifiant OP": "Identifiant OP",
   "Etablissement d'origine": "Etablissement d'origine",
+  "ANNÉE DE DIPLOMATION": "ANNÉE DE DIPLOMATION",
   Filière: "Filière",
   Nationalité: "Nationalité",
   Nom: "Nom",

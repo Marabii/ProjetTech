@@ -25,10 +25,11 @@ router.post(
   ) => {
     try {
       let { page, limit, ...query } = req.body;
-
+      let { sortingOrder } = req.query;
       // Set default values if none are provided
       page = page || 1;
       limit = limit || 20;
+      sortingOrder = sortingOrder || "decreasing";
 
       // Calculate the skipping number
       const skip = (page - 1) * limit;
@@ -40,9 +41,15 @@ router.post(
         }
       });
 
+      // Determine the sorting order
+      const sortOrder = sortingOrder === "increasing" ? 1 : -1;
+
       // Execute queries in parallel for efficiency
       const [students, totalCount] = await Promise.all([
-        Etudiant.find(query).skip(skip).limit(limit),
+        Etudiant.find(query)
+          .skip(skip)
+          .limit(limit)
+          .sort({ "ANNÉE DE DIPLOMATION": sortOrder }),
         Etudiant.countDocuments(query),
       ]);
 

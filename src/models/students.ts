@@ -94,7 +94,8 @@ const EtudiantSchema: Schema = new Schema(
     },
     Filière: {
       type: String,
-      required: false,
+      required: true,
+      default: "AST",
     },
     Nationalité: {
       type: String,

@@ -130,7 +130,7 @@ export default async function processBddFile(
     entitePrincipaleMap[identifiantOP] = {
       "Identifiant OP": identifiantOP,
       "Etablissement d'origine": row["Etablissement d'origine"],
-      Filière: row["Filière"],
+      Filière: row["Filière"] || "AST",
       Nationalité: row["Nationalité"],
       Nom: row["Nom"],
       Prénom: row["Prénom"],

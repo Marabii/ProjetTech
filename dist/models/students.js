@@ -108,7 +108,8 @@ const EtudiantSchema = new mongoose_1.Schema({
     },
     Filière: {
         type: String,
-        required: false,
+        required: true,
+        default: "AST",
     },
     Nationalité: {
         type: String,

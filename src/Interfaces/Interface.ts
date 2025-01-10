@@ -19,7 +19,7 @@ export interface IEtudiant {
   _id?: string;
   "Identifiant OP": string;
   "Etablissement d'origine"?: string;
-  Filière?: string;
+  Filière: string;
   Nationalité?: string;
   Nom?: string;
   Prénom?: string;

@@ -16,80 +16,107 @@ router.get("/total-students", async (req: Request, res: Response) => {
     return;
   }
 });
+
 // Distribution by Nationality
-router.get("/nationality-distribution", async (req: Request, res: Response) => {
-  try {
-    const distribution = await Etudiant.aggregate([
-      { $match: { Nationalité: { $exists: true, $ne: null } } },
-      { $group: { _id: "$Nationalité", count: { $sum: 1 } } },
-      { $sort: { count: -1 } },
-    ]);
+router.get(
+  "/nationality-distribution",
+  async (req: Request, res: Response): Promise<void> => {
+    try {
+      const { graduationYear } = req.query;
 
-    // If no data is found
-    if (!distribution || distribution.length === 0) {
-      res.json({ error: "No nationality data available" });
-      return;
+      // Build the match object with proper typing
+      const matchObj: Record<string, any> = {
+        Nationalité: { $exists: true, $ne: null },
+      };
+
+      if (graduationYear) {
+        matchObj["ANNÉE DE DIPLOMATION"] = graduationYear;
+      }
+
+      // Perform the aggregation pipeline
+      const distribution = await Etudiant.aggregate([
+        { $match: matchObj },
+        { $group: { _id: "$Nationalité", count: { $sum: 1 } } },
+        { $sort: { count: -1 } },
+      ]);
+
+      // Send the response
+      res.json(distribution);
+    } catch (error) {
+      console.error("Error in /nationality-distribution:", error);
+      res.status(500).json({ error: "Internal server error" });
     }
-
-    res.json(distribution);
-    return;
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: "Internal server error" });
-    return;
   }
-});
+);
 
 // Distribution by Filière (Field of Study)
-router.get("/filiere-distribution", async (req: Request, res: Response) => {
-  try {
-    const distribution = await Etudiant.aggregate([
-      { $match: { Filière: { $exists: true, $ne: null } } },
-      { $group: { _id: "$Filière", count: { $sum: 1 } } },
-      { $sort: { count: -1 } },
-    ]);
+router.get(
+  "/filiere-distribution",
+  async (req: Request, res: Response): Promise<void> => {
+    try {
+      const { graduationYear } = req.query;
 
-    if (!distribution || distribution.length === 0) {
-      res.json({ error: "No filière data available" });
-      return;
+      // Build the match object with proper typing
+      const matchObj: Record<string, any> = {
+        Filière: { $exists: true, $ne: null },
+      };
+
+      if (graduationYear) {
+        matchObj["ANNÉE DE DIPLOMATION"] = graduationYear;
+      }
+
+      // Perform the aggregation pipeline
+      const distribution = await Etudiant.aggregate([
+        { $match: matchObj },
+        { $group: { _id: "$Filière", count: { $sum: 1 } } },
+        { $sort: { count: -1 } },
+      ]);
+
+      // Send the response
+      res.json(distribution);
+    } catch (error) {
+      console.error("Error in /filiere-distribution:", error);
+      res.status(500).json({ error: "Internal server error" });
     }
-
-    res.json(distribution);
-    return;
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: "Internal server error" });
-    return;
   }
-});
+);
 
 // Internship by Country Distribution
-router.get("/internship-by-country", async (req: Request, res: Response) => {
-  try {
-    const distribution = await Etudiant.aggregate([
-      {
-        $unwind: {
-          path: "$CONVENTION DE STAGE",
-          preserveNullAndEmptyArrays: true,
+router.get(
+  "/internship-by-country",
+  async (req: Request, res: Response): Promise<void> => {
+    try {
+      const { graduationYear } = req.query;
+
+      // Build the match object with proper typing
+      const matchObj: Record<string, any> = {
+        "CONVENTION DE STAGE.Pays": { $exists: true, $ne: null },
+      };
+
+      if (graduationYear) {
+        matchObj["ANNÉE DE DIPLOMATION"] = graduationYear;
+      }
+
+      // Perform the aggregation pipeline
+      const distribution = await Etudiant.aggregate([
+        {
+          $unwind: {
+            path: "$CONVENTION DE STAGE",
+            preserveNullAndEmptyArrays: true,
+          },
         },
-      },
-      { $match: { "CONVENTION DE STAGE.Pays": { $exists: true, $ne: null } } },
-      { $group: { _id: "$CONVENTION DE STAGE.Pays", count: { $sum: 1 } } },
-      { $sort: { count: -1 } },
-    ]);
+        { $match: matchObj },
+        { $group: { _id: "$CONVENTION DE STAGE.Pays", count: { $sum: 1 } } },
+        { $sort: { count: -1 } },
+      ]);
 
-    if (!distribution || distribution.length === 0) {
-      res.json({ error: "No internship country data available" });
-      return;
+      // Send the response
+      res.json(distribution);
+    } catch (error) {
+      console.error("Error in /internship-by-country:", error);
+      res.status(500).json({ error: "Internal server error" });
     }
-
-    res.json(distribution);
-    return;
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: "Internal server error" });
-    return;
   }
-});
+);
 
 export default router;

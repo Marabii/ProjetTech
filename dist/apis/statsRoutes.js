@@ -32,49 +32,65 @@ router.get("/total-students", (req, res) => __awaiter(void 0, void 0, void 0, fu
 // Distribution by Nationality
 router.get("/nationality-distribution", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
+        const { graduationYear } = req.query;
+        // Build the match object with proper typing
+        const matchObj = {
+            Nationalité: { $exists: true, $ne: null },
+        };
+        if (graduationYear) {
+            matchObj["ANNÉE DE DIPLOMATION"] = graduationYear;
+        }
+        // Perform the aggregation pipeline
         const distribution = yield students_1.default.aggregate([
-            { $match: { Nationalité: { $exists: true, $ne: null } } },
+            { $match: matchObj },
             { $group: { _id: "$Nationalité", count: { $sum: 1 } } },
             { $sort: { count: -1 } },
         ]);
-        // If no data is found
-        if (!distribution || distribution.length === 0) {
-            res.json({ error: "No nationality data available" });
-            return;
-        }
+        // Send the response
         res.json(distribution);
-        return;
     }
     catch (error) {
-        console.error(error);
+        console.error("Error in /nationality-distribution:", error);
         res.status(500).json({ error: "Internal server error" });
-        return;
     }
 }));
 // Distribution by Filière (Field of Study)
 router.get("/filiere-distribution", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
+        const { graduationYear } = req.query;
+        // Build the match object with proper typing
+        const matchObj = {
+            Filière: { $exists: true, $ne: null },
+        };
+        if (graduationYear) {
+            matchObj["ANNÉE DE DIPLOMATION"] = graduationYear;
+        }
+        // Perform the aggregation pipeline
         const distribution = yield students_1.default.aggregate([
-            { $match: { Filière: { $exists: true, $ne: null } } },
+            { $match: matchObj },
             { $group: { _id: "$Filière", count: { $sum: 1 } } },
             { $sort: { count: -1 } },
         ]);
-        if (!distribution || distribution.length === 0) {
-            res.json({ error: "No filière data available" });
-            return;
-        }
+        // Send the response
         res.json(distribution);
-        return;
     }
     catch (error) {
-        console.error(error);
+        console.error("Error in /filiere-distribution:", error);
         res.status(500).json({ error: "Internal server error" });
-        return;
     }
 }));
 // Internship by Country Distribution
 router.get("/internship-by-country", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
+        const { graduationYear } = req.query;
+        // Build the match object with proper typing
+        const matchObj = {
+            "CONVENTION DE STAGE.Pays": { $exists: true, $ne: null },
+        };
+        if (graduationYear) {
+            matchObj["ANNÉE DE DIPLOMATION"] = graduationYear;
+        }
+        // Perform the aggregation pipeline
         const distribution = yield students_1.default.aggregate([
             {
                 $unwind: {
@@ -82,21 +98,16 @@ router.get("/internship-by-country", (req, res) => __awaiter(void 0, void 0, voi
                     preserveNullAndEmptyArrays: true,
                 },
             },
-            { $match: { "CONVENTION DE STAGE.Pays": { $exists: true, $ne: null } } },
+            { $match: matchObj },
             { $group: { _id: "$CONVENTION DE STAGE.Pays", count: { $sum: 1 } } },
             { $sort: { count: -1 } },
         ]);
-        if (!distribution || distribution.length === 0) {
-            res.json({ error: "No internship country data available" });
-            return;
-        }
+        // Send the response
         res.json(distribution);
-        return;
     }
     catch (error) {
-        console.error(error);
+        console.error("Error in /internship-by-country:", error);
         res.status(500).json({ error: "Internal server error" });
-        return;
     }
 }));
 exports.default = router;
